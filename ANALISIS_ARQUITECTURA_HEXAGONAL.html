@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Arquitectura Hexagonal | Cyber-Inventory</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-primario: #00d4ff;
+            --color-secundario: #ff00ff;
+            --color-fondo: #0d0d0d;
+            --color-panel: #1a1a1a;
+            --color-texto: #e0e0e0;
+            --color-texto-oscuro: #808080;
+            --color-correcto: #00ff00;
+            --color-alerta: #ffaa00;
+            --color-error: #ff6b6b;
+            --font-mono: 'Courier New', monospace;
+            --transicion: all 0.3s ease;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a0d2e 100%);
+            color: var(--color-texto);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+        }
+
+        /* ==================== HEADER ====================*/
+        header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(255, 0, 255, 0.2) 100%);
+            border-bottom: 3px solid var(--color-primario);
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--color-primario), var(--color-secundario));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .header-content p {
+            font-size: 1.1em;
+            color: var(--color-text-oscuro);
+            margin-bottom: 15px;
+        }
+
+        .header-badges {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+        }
+
+        .badge {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--color-primario);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: var(--color-primario);
+        }
+
+        /* ==================== NAVEGACIÓN ====================*/
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--color-panel);
+            border-bottom: 2px solid var(--color-primario);
+            padding: 0;
+            margin: 0;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 180px;
+            z-index: 50;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px 20px;
+            background: var(--color-panel);
+            color: var(--color-texto-oscuro);
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: var(--transicion);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 150px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--color-primario);
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--color-primario);
+            border-bottom-color: var(--color-primario);
+            box-shadow: inset 0 -3px 0 var(--color-primario);
+        }
+
+        /* ==================== CONTENEDOR PRINCIPAL ====================*/
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==================== SECCIONES ====================*/
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 2em;
+            color: var(--color-primario);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--color-primario);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        h3 {
+            font-size: 1.4em;
+            color: var(--color-secundario);
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        /* ==================== CAJAS DE CONTENIDO ====================*/
+        .content-box {
+            background: var(--color-panel);
+            border: 2px solid var(--color-primario);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+            transition: var(--transicion);
+        }
+
+        .content-box:hover {
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .content-box.highlight {
+            border-color: var(--color-secundario);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+        }
+
+        .content-box.ok {
+            border-color: var(--color-correcto);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+
+        .content-box.error {
+            border-color: var(--color-error);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.2);
+        }
+
+        .content-box.warning {
+            border-color: var(--color-alerta);
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
+        }
+
+        /* ==================== LISTAS ====================*/
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            line-height: 1.8;
+        }
+
+        /* ==================== CÓDIGO ====================*/
+        code {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--color-primario);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--color-primario);
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 15px 0;
+            color: var(--color-primario);
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        /* ==================== TABLAS ====================*/
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--color-primario);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        th {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--color-primario);
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 2px solid var(--color-primario);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        /* ==================== ALERTAS ====================*/
+        .alert {
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-left: 4px solid;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .alert-success {
+            border-color: var(--color-correcto);
+            color: var(--color-correcto);
+        }
+
+        .alert-error {
+            border-color: var(--color-error);
+            color: var(--color-error);
+        }
+
+        .alert-warning {
+            border-color: var(--color-alerta);
+            color: var(--color-alerta);
+        }
+
+        .alert-info {
+            border-color: var(--color-primario);
+            color: var(--color-primario);
+        }
+
+        /* ==================== DIAGRAMAS ====================*/
+        .diagram-container {
+            background: var(--color-panel);
+            border: 2px solid var(--color-primario);
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+            overflow-x: auto;
+        }
+
+        .diagram-container svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* ==================== GRILLA ====================*/
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-item {
+            background: var(--color-panel);
+            border: 1px solid var(--color-primario);
+            padding: 20px;
+            border-radius: 4px;
+            transition: var(--transicion);
+        }
+
+        .grid-item:hover {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .grid-item h4 {
+            color: var(--color-primario);
+            margin-bottom: 10px;
+        }
+
+        /* ==================== COMPARACIÓN ====================*/
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .comparison-item {
+            padding: 20px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+
+        .comparison-item.current {
+            border-left-color: var(--color-error);
+            background: rgba(255, 107, 107, 0.05);
+        }
+
+        .comparison-item.proposed {
+            border-left-color: var(--color-correcto);
+            background: rgba(0, 255, 0, 0.05);
+        }
+
+        .comparison-item h4 {
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid;
+        }
+
+        .comparison-item.current h4 {
+            color: var(--color-error);
+            border-bottom-color: var(--color-error);
+        }
+
+        .comparison-item.proposed h4 {
+            color: var(--color-correcto);
+            border-bottom-color: var(--color-correcto);
+        }
+
+        /* ==================== PIE ====================*/
+        footer {
+            background: var(--color-panel);
+            border-top: 2px solid var(--color-primario);
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: 60px;
+            color: var(--color-texto-oscuro);
+        }
+
+        footer p {
+            margin: 10px 0;
+        }
+
+        /* ==================== RESPONSIVE ====================*/
+        @media (max-width: 1024px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+
+            .tabs {
+                top: auto;
+            }
+        }
+
+        /* ==================== UTILIDADES ====================*/
+        .text-center {
+            text-align: center;
+        }
+
+        .text-muted {
+            color: var(--color-texto-oscuro);
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .highlight-box {
+            background: rgba(0, 212, 255, 0.05);
+            border-left: 4px solid var(--color-primario);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .benefit-box {
+            background: rgba(0, 255, 0, 0.05);
+            border-left: 4px solid var(--color-correcto);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: var(--color-correcto);
+        }
+
+        .risk-box {
+            background: rgba(255, 107, 107, 0.05);
+            border-left: 4px solid var(--color-error);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: var(--color-error);
+        }
+
+        /* ==================== NUMERACIÓN ====================*/
+        .num-list {
+            counter-reset: item;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .num-list li {
+            counter-increment: item;
+            margin-bottom: 20px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .num-list li:before {
+            content: counter(item);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: var(--color-primario);
+            color: var(--color-fondo);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="header-content">
+            <h1>⚡ ARQUITECTURA HEXAGONAL 🏗️</h1>
+            <p>Análisis Técnico-Funcional | Cyber-Inventory Project</p>
+            <div class="header-badges">
+                <span class="badge">Senior Architecture Review</span>
+                <span class="badge">FastAPI + SQLAlchemy</span>
+                <span class="badge">10 Hardware Categories</span>
+                <span class="badge">Repository Pattern</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVEGACIÓN -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('analisis')">📊 Análisis Actual</button>
+        <button class="tab-btn" onclick="showTab('hexagonal')">🏗️ ¿Qué es Hexagonal?</button>
+        <button class="tab-btn" onclick="showTab('diagramas')">📈 Diagramas Mermaid</button>
+        <button class="tab-btn" onclick="showTab('beneficios')">✨ Beneficios</button>
+        <button class="tab-btn" onclick="showTab('recomendaciones')">🎯 Recomendaciones</button>
+        <button class="tab-btn" onclick="showTab('ruta')">🚀 Plan de Acción</button>
+    </div>
+
+    <div class="container">
+        <!-- TAB 1: ANÁLISIS ACTUAL -->
+        <div id="analisis" class="tab-content active">
+            <section>
+                <h2>1️⃣ Análisis Crítico de la Arquitectura Actual</h2>
+
+                <div class="content-box warning">
+                    <h3>⚠️ Veredicto Preliminar</h3>
+                    <p>
+                        Tu aplicación <strong>NO implementa completamente</strong> la Arquitectura Hexagonal, 
+                        pero cuenta con <strong>componentes fundamentales</strong> que facilitan su migración. 
+                        Tiene un 40-50% de la estructura de puertos y adaptadores.
+                    </p>
+                </div>
+
+                <h3>Elementos Encontrados en Tu Proyecto</h3>
+
+                <div class="grid-2">
+                    <div class="grid-item ok">
+                        <h4>✅ Repository Pattern (EXISTE)</h4>
+                        <p><strong>Ubicación:</strong> <code>app/crud.py</code></p>
+                        <p><strong>Clase:</strong> <code>HardwareRepository</code></p>
+                        <p>Abstrae el acceso a datos. Este es el corazón de la hexagonal.</p>
+                        <pre>class HardwareRepository:
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def crear(self, item)
+    def obtener_por_id(self, id)
+    def obtener_todos(...)</pre>
+                    </div>
+
+                    <div class="grid-item ok">
+                        <h4>✅ Inyección de Dependencias (EXISTE)</h4>
+                        <p><strong>Ubicación:</strong> <code>app/main.py</code> y <code>app/database.py</code></p>
+                        <pre>async def crear_item(
+    item: HardwareItemCreate,
+    db: Session = Depends(get_db)
+):
+    repository = HardwareRepository(db)</pre>
+                        <p>FastAPI lo maneja automáticamente.</p>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="grid-item error">
+                        <h4>❌ Sin Capa de Dominio (NO EXISTE)</h4>
+                        <p>No hay objetos de negocio puros. La lógica está dispersa entre:</p>
+                        <ul>
+                            <li>FastAPI endpoints (main.py)</li>
+                            <li>Models SQLAlchemy (models.py)</li>
+                            <li>Schemas Pydantic (schemas.py)</li>
+                        </ul>
+                    </div>
+
+                    <div class="grid-item error">
+                        <h4>❌ Sin Puertos Explícitos (NO EXISTE)</h4>
+                        <p>No hay interfaces definidas para:</p>
+                        <ul>
+                            <li>Casos de uso</li>
+                            <li>Adaptadores secundarios</li>
+                            <li>Contratosde entrada/salida</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="grid-item error">
+                        <h4>❌ Acoplamiento a FastAPI (PROBLEMA)</h4>
+                        <p>El framework web está integrado en la lógica:</p>
+                        <pre>@app.get("/api/items")
+async def listar_items(
+    skip: int = Query(0)
+):
+    # Lógica de negocio + HTTP</pre>
+                        <p>Los endpoints de negocio están directamente en main.py.</p>
+                    </div>
+
+                    <div class="grid-item error">
+                        <h4>❌ Modelos ORM = DTOs (ANTIPATRÓN)</h4>
+                        <p>SQLAlchemy models + Schemas son duplicados:</p>
+                        <pre>class HardwareItem(Base):
+    nombre: str
+    categoria: Enum
+    stock: int
+
+class HardwareItemResponse:
+    nombre: str
+    categoria: Enum
+    stock: int</pre>
+                    </div>
+                </div>
+
+                <h3>Arquitectura de Tu Proyecto (Estado Actual)</h3>
+
+                <div class="diagram-container">
+                    <div class="mermaid" id="diagramaActual">
+graph TB
+    subgraph "Capa Presentación (Acoplada)"
+        HTTP["🌐 FastAPI Endpoints<br/>@app.get, @app.post"]
+        Routes["📡 Rutas HTTP<br/>/api/items<br/>/api/buscar<br/>/api/categorias"]
+    end
+
+    subgraph "Capa de Negocio (Parcialmente Separada)"
+        Schemas["📋 Schemas Pydantic<br/>HardwareItemCreate<br/>HardwareItemResponse"]
+        Repository["🗂️ Repository Pattern<br/>HardwareRepository<br/>CRUD Operations"]
+    end
+
+    subgraph "Capa de Persistencia (Fuertemente Acoplada)"
+        Models["🗄️ ORM Models<br/>HardwareItem<br/>HardwareCategory"]
+        Database["💾 SQLAlchemy + SQLite<br/>Sesiones y Transacciones"]
+    end
+
+    subgraph "Frontend (Separado)"
+        HTML["🖥️ HTML/CSS/JavaScript<br/>static/index.html"]
+    end
+
+    HTTP -->|Usa| Schemas
+    Routes -->|Crea instances| Repository
+    Repository -->|Accede| Models
+    Models -->|Define| Database
+    HTML -->|HTTP Calls| Routes
+    
+    style HTTP fill:#ff6b6b,stroke:#ff0000,color:#fff
+    style Models fill:#ff6b6b,stroke:#ff0000,color:#fff
+    style Database fill:#ff6b6b,stroke:#ff0000,color:#fff
+    style Repository fill:#ffaa00,stroke:#ff8800,color:#fff
+    style Schemas fill:#ffaa00,stroke:#ff8800,color:#fff
+    style HTML fill:#00aa00,stroke:#00ff00,color:#000
+                    </div>
+                </div>
+
+                <h3>Problemas Identificados</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Problema</th>
+                            <th>Ubicación</th>
+                            <th>Severidad</th>
+                            <th>Impacto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lógica de negocio en endpoints</td>
+                            <td>app/main.py</td>
+                            <td style="color: var(--color-error);">🔴 Alta</td>
+                            <td>Difícil testear sin HTTP</td>
+                        </tr>
+                        <tr>
+                            <td>Sin objetos de dominio puros</td>
+                            <td>Todo el proyecto</td>
+                            <td style="color: var(--color-alerta);">🟠 Media</td>
+                            <td>Violaciones de lógica sin validación</td>
+                        </tr>
+                        <tr>
+                            <td>Repository parece un DAO</td>
+                            <td>app/crud.py</td>
+                            <td style="color: var(--color-alerta);">🟠 Media</td>
+                            <td>No usa la inversión de dependencias al máximo</td>
+                        </tr>
+                        <tr>
+                            <td>Modelos = Base de datos</td>
+                            <td>app/models.py</td>
+                            <td style="color: var(--color-alerta);">🟠 Media</td>
+                            <td>Cambios en BD afectan todo</td>
+                        </tr>
+                        <tr>
+                            <td>Schemas duplican Models</td>
+                            <td>app/schemas.py</td>
+                            <td style="color: #00aa00;">🟢 Baja</td>
+                            <td>Redundancia, mantenimiento difícil</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </section>
+        </div>
+
+        <!-- TAB 2: ¿QUÉ ES HEXAGONAL? -->
+        <div id="hexagonal" class="tab-content">
+            <section>
+                <h2>2️⃣ La Arquitectura Hexagonal (Puertos y Adaptadores)</h2>
+
+                <div class="content-box">
+                    <h3>Concepto Fundamental</h3>
+                    <p>
+                        La <strong>Arquitectura Hexagonal</strong> (también conocida como Puertos y Adaptadores) 
+                        es un patrón arquitectónico que aísla la lógica de negocio del mundo exterior a través 
+                        de interfaces abstractas.
+                    </p>
+                </div>
+
+                <h3>Los Seis Pilares 🏛️</h3>
+
+                <div class="grid-3">
+                    <div class="grid-item">
+                        <h4>1. Núcleo de Dominio</h4>
+                        <p>Lógica de negocio pura, sin dependencias externas. Objetos que representan 
+                        conceptos reales de tu dominio (HardwareItem, Category, Inventory).</p>
+                        <p style="color: var(--color-primario); margin-top: 10px;"><strong>Regla:</strong> Cero dependencias de frameworks</p>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>2. Puertos (Interfaces)</h4>
+                        <p>Contratos que definen cómo el mundo exterior puede usar tu dominio. 
+                        Especifican qué debe implementar cada adaptador (HardwareRepositoryPort, 
+                        EmailServicePort).</p>
+                        <p style="color: var(--color-primario); margin-top: 10px;"><strong>Regla:</strong> Son abstracciones, no implementaciones</p>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>3. Adaptadores Primarios</h4>
+                        <p>Controlan la entrada al dominio. Pueden ser HTTP (FastAPI), CLI, gRPC. 
+                        Traducen requests externos a llamadas de dominio.</p>
+                        <p style="color: var(--color-primario); margin-top: 10px;"><strong>Ejemplo:</strong> Controllers, Controllers, Handlers</p>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>4. Adaptadores Secundarios</h4>
+                        <p>El dominio los usa para comunicarse con sistemas externos. 
+                        Implementan puertos que define el dominio (Repositories, External APIs, 
+                        Message Queues).</p>
+                        <p style="color: var(--color-primario); margin-top: 10px;"><strong>Ejemplo:</strong> DB, Email, Payment Gateways</p>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>5. Inversión de Control</h4>
+                        <p>El dominio NO conoce sus puertos. Los puertos se inyectan en tiempo 
+                        de ejecución. Permite cambiar implementaciones sin tocar la lógica.</p>
+                        <p style="color: var(--color-primario); margin-top: 10px;"><strong>Beneficio:</strong> Testeable, flexible, mantenible</p>
+                    </div>
+
+                    <div class="grid-item">
+                        <h4>6. Independencia de Frameworks</h4>
+                        <p>Puedes cambiar de FastAPI a Flask a gRPC sin tocar el dominio. 
+                        Solo cambian los adaptadores primarios.</p>
+                        <p style="color: var(--color-primario); margin-top: 10px;"><strong>Ventaja:</strong> Future-proof, reutilizable</p>
+                    </div>
+                </div>
+
+                <h3>Flujo de Datos en Hexagonal</h3>
+
+                <div class="diagram-container">
+                    <div class="mermaid" id="diagramaFlujo">
+graph LR
+    subgraph "MUNDO EXTERIOR"
+        Client["🌐 Cliente HTTP<br/>POST /api/items<br/>GET /api/items/1"]
+    end
+
+    subgraph "ADAPTADORES PRIMARIOS (Input)"
+        Controller["📝 Controller/Handler<br/>Recibe HTTP request<br/>Traduce a Commands/Queries"]
+    end
+
+    subgraph "PUERTOS (Interfaces)"
+        UseCasePort["🚪 Use Case Port<br/>CrearHardwareUseCase<br/>(abstracto)"]
+    end
+
+    subgraph "NÚCLEO DE DOMINIO"
+        DomainService["⚡ Domain Service<br/>- Valida negocio<br/>- Ejecuta lógica<br/>- Emite eventos"]
+        Entity["📦 Entity<br/>HardwareItem<br/>Invariantes"]
+    end
+
+    subgraph "PUERTOS SECUNDARIOS (Interfaces)"
+        RepoPort["🚪 Repository Port<br/>guardar()<br/>obtener()"]
+    end
+
+    subgraph "ADAPTADORES SECUNDARIOS (Output)"
+        Repo["💾 Adapter Repository<br/>Implementación SQL<br/>Transforma a ORM"]
+        Database["🗄️ Database<br/>SQLite"]
+    end
+
+    Client -->|HTTP| Controller
+    Controller -->|Llama| UseCasePort
+    UseCasePort -->|Implementa| DomainService
+    DomainService -->|Usa| Entity
+    DomainService -->|Depende| RepoPort
+    RepoPort -->|Implementa| Repo
+    Repo -->|Escribe/Lee| Database
+
+    style Client fill:#00aa00,stroke:#00ff00,color:#000
+    style Controller fill:#ffaa00,stroke:#ff8800,color:#fff
+    style UseCasePort fill:#00d4ff,stroke:#0099ff,color:#000
+    style DomainService fill:#ff00ff,stroke:#ff0088,color:#fff
+    style Entity fill:#ff00ff,stroke:#ff0088,color:#fff
+    style RepoPort fill:#00d4ff,stroke:#0099ff,color:#000
+    style Repo fill:#ffaa00,stroke:#ff8800,color:#fff
+    style Database fill:#666,stroke:#999,color:#fff
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>🎯 Insight Crucial:</strong> Observa que el dominio NUNCA conoce los detalles 
+                    de HTTP, SQL o ningún framework. El dominio solo conoce sus puertos (interfaces 
+                    abstractas). Todo lo demás son detalles de implementación.
+                </div>
+
+                <h3>Capas en Orden de Importancia 📊</h3>
+
+                <ol class="num-list">
+                    <li>
+                        <strong>Núcleo de Dominio (Sagrado)</strong><br>
+                        Es lo más importante. Aquí está tu oro. Debe ser independiente, puro, testeable.
+                        0 dependencias externas.
+                    </li>
+                    <li>
+                        <strong>Puertos (Contratos)</strong><br>
+                        Define interfaces que todos deben cumplir. Si cambias la BD, el puerto sigue igual.
+                        El adaptador cambia.
+                    </li>
+                    <li>
+                        <strong>Adaptadores Secundarios (Implementaciones)</strong><br>
+                        SQL, APIs externas, email. Pueden cambiar. El dominio no se entera.
+                    </li>
+                    <li>
+                        <strong>Adaptadores Primarios (API)</strong><br>
+                        FastAPI, CLI, gRPC. Son entrypoints. Pueden cambiar también.
+                    </li>
+                </ol>
+
+            </section>
+        </div>
+
+        <!-- TAB 3: DIAGRAMAS MERMAID -->
+        <div id="diagramas" class="tab-content">
+            <section>
+                <h2>3️⃣ Diagramas Comparativos</h2>
+
+                <h3>Diagrama A: Arquitectura ACTUAL (Estado Presente)</h3>
+
+                <div class="alert alert-warning">
+                    Observa cómo los frameworks están acoplados a la lógica de negocio.
+                    Cambiar FastAPI significaría reescribir casi todo.
+                </div>
+
+                <div class="diagram-container">
+                    <div class="mermaid" id="diagramaActualGrande">
+graph TB
+    subgraph "PRESENTACIÓN (Acoplada a FastAPI)"
+        H["HTTP Layer"]
+        E1["@app.get /api/items"]
+        E2["@app.post /api/items"]
+        E3["@app.get /api/buscar"]
+    end
+
+    subgraph "LÓGICA (Parcialmente separada)"
+        Rep["HardwareRepository<br/>- crear()<br/>- obtener_por_id()<br/>- obtener_todos()<br/>- buscar_por_nombre()"]
+        Schema["Pydantic Schemas<br/>- HardwareItemCreate<br/>- HardwareItemUpdate<br/>- HardwareItemResponse"]
+    end
+
+    subgraph "PERSISTENCIA (Fuertemente Acoplada)"
+        ORM["SQLAlchemy Models<br/>HardwareItem<br/>HardwareCategory Enum"]
+        SQL["SQLite Database<br/>warehouse.db"]
+    end
+
+    subgraph "PRESENTACIÓN (Frontend)"
+        JS["HTML/CSS/JavaScript<br/>Llamadas AJAX<br/>a endpoints HTTP"]
+    end
+
+    H --> E1
+    H --> E2
+    H --> E3
+    E1 --> Schema
+    E2 --> Schema
+    E3 --> Schema
+    Schema --> Rep
+    Rep --> ORM
+    ORM --> SQL
+    JS -->|Requests| H
+    
+    style H fill:#ff6b6b
+    style E1 fill:#ff6b6b
+    style E2 fill:#ff6b6b
+    style E3 fill:#ff6b6b
+    style Rep fill:#ffaa00
+    style Schema fill:#ffaa00
+    style ORM fill:#ff6b6b
+    style SQL fill:#333
+    style JS fill:#00aa00
+                    </div>
+                </div>
+
+                <h3>Diagrama B: Arquitectura PROPUESTA (Hexagonal)</h3>
+
+                <div class="alert alert-success">
+                    El dominio está aislado en el centro. Puedes cambiar FastAPI a Flask,
+                    SQLite a PostgreSQL, sin tocar el negocio.
+                </div>
+
+                <div class="diagram-container">
+                    <div class="mermaid" id="diagramaHexagonal">
+graph TB
+    subgraph "ADAPTADORES PRIMARIOS (Entrada)"
+        HTTP["FastAPI Controller<br/>POST /api/items<br/>GET /api/items"]
+        CLI["CLI Handler<br/>create-item cmd"]
+    end
+
+    subgraph "PUERTOS PRIMARIOS (Interfaces de Entrada)"
+        CrearPort["🚪 CrearHardwarePort<br/>(abstract)"]
+        ObtenerPort["🚪 ObtenerHardwarePort<br/>(abstract)"]
+    end
+
+    subgraph "NÚCLEO DE DOMINIO ★★★"
+        Service["⚡ HardwareService<br/>- validar_stock()<br/>- calcular_valor_total()<br/>- aplicar_descuento()"]
+        Entity["📦 HardwareEntity<br/>- id<br/>- nombre<br/>- categoria<br/>- stock (invariante)"]
+        ValueObj["🎁 ValueObjects<br/>- Precio<br/>- Categoria<br/>- Stock"]
+    end
+
+    subgraph "PUERTOS SECUNDARIOS (Interfaces de Salida)"
+        RepoPort["🚪 HardwareRepositoryPort<br/>guardar(entity)<br/>obtener(id)"]
+        EmailPort["🚪 EmailServicePort<br/>enviar_alerta()"]
+    end
+
+    subgraph "ADAPTADORES SECUNDARIOS (Salida)"
+        SQLAdapter["SQLAlchemy Adapter<br/>Mapea Entity → ORM"]
+        EmailAdapter["Sendgrid Adapter<br/>Implementa EmailPort"]
+    end
+
+    subgraph "SISTEMAS EXTERNOS"
+        DB["SQLite / PostgreSQL<br/>warehouse.db"]
+        Email["Sendgrid API<br/>Notificaciones"]
+    end
+
+    HTTP --> CrearPort
+    CLI --> CrearPort
+    CrearPort --> Service
+    Service --> Entity
+    Service --> ValueObj
+    Service --> RepoPort
+    Service --> EmailPort
+    RepoPort --> SQLAdapter
+    EmailPort --> EmailAdapter
+    SQLAdapter --> DB
+    EmailAdapter --> Email
+
+    style HTTP fill:#ffaa00
+    style CLI fill:#ffaa00
+    style CrearPort fill:#00d4ff
+    style ObtenerPort fill:#00d4ff
+    style Service fill:#ff00ff
+    style Entity fill:#ff00ff
+    style ValueObj fill:#ff00ff
+    style RepoPort fill:#00d4ff
+    style EmailPort fill:#00d4ff
+    style SQLAdapter fill:#ffaa00
+    style EmailAdapter fill:#ffaa00
+    style DB fill:#666
+    style Email fill:#666
+                    </div>
+                </div>
+
+                <h3>Comparación Visual: Antes (Tu Código) vs. Después (Hexagonal)</h3>
+
+                <div class="comparison">
+                    <div class="comparison-item current">
+                        <h4>❌ ESTADO ACTUAL</h4>
+                        <pre>@app.post("/api/items")
+async def crear(
+    item: HardwareItemCreate,
+    db: Session
+):
+    repo = HardwareRepository(db)
+    
+    # Lógica de negocio 
+    # aquí adentro
+    db_item = HardwareItem(...)
+    
+    repo.crear(db_item)
+    return HardwareItemResponse()</pre>
+                        <p><strong>Problema:</strong> Lógica en endpoint HTTP</p>
+                    </div>
+
+                    <div class="comparison-item proposed">
+                        <h4>✅ ARQUITECTURA HEXAGONAL</h4>
+                        <pre>// Endpoint (Adapter)
+@app.post("/api/items")
+async def crear(
+    req: CreateHardwareRequest,
+    svc: HardwareService
+):
+    cmd = CreateHardwareCommand(req)
+    result = svc.crear(cmd)
+    return CreateHardwareResponse(result)
+
+// Service (Domain)
+class HardwareService:
+    def crear(self, cmd: Cmd):
+        entity = HardwareEntity(...)
+        entity.validar()  # Non-anemic
+        return self.repo.guardar(entity)</pre>
+                        <p><strong>Ventaja:</strong> Lógica en servicio de dominio</p>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- TAB 4: BENEFICIOS -->
+        <div id="beneficios" class="tab-content">
+            <section>
+                <h2>4️⃣ Beneficios Específicos para Tu Proyecto</h2>
+
+                <div class="benefit-box">
+                    <h3>✅ Mantenibilidad 🔧</h3>
+                    <p>
+                        <strong>Problema actual:</strong> Si quieres cambiar la lógica de buscar items, 
+                        debes modifier <code>crud.py</code>, <code>main.py</code>, 
+                        potencialmente <code>schemas.py</code>, 
+                        y asegurarte que HTTP siga funcionando.
+                    </p>
+                    <p>
+                        <strong>Con Hexagonal:</strong> La lógica de búsqueda está en el dominio. 
+                        HTTPDetalle es un adaptador. Cambias el adaptador sin tocar la lógica.
+                    </p>
+                    <pre class="mt-20">// DOMINIO (Intocable)
+class BuscadorHardware:
+    def buscar(self, criterios: CriteriosBusqueda) -> List[Hardware]:
+        # Lógica pura, sin dependencias HTTP/DB
+        return self.repo.filtrar(criterios)  # Puerto
+
+// ADAPTADOR HTTP (Reemplazable)
+@app.get("/api/buscar")
+async def endpoint_buscar(q: str, service: BuscadorHardware):
+    resultado = service.buscar(CriteriosBusqueda(q))  # Llama al dominio
+    return BuscarResponse(resultado)  # Adapta a HTTP</pre>
+                </div>
+
+                <div class="benefit-box">
+                    <h3>✅ Testabilidad 🧪</h3>
+                    <p>
+                        <strong>Problema actual:</strong> Para testear la búsqueda, necesitas una base de datos 
+                        real, una sesión SQLAlchemy, y simular requests HTTP.
+                    </p>
+                    <p>
+                        <strong>Con Hexagonal:</strong> Testas la lógica con un mock repository.
+                    </p>
+                    <pre class="mt-20">// Test Puro
+class MockHardwareRepo(HardwareRepositoryPort):
+    def filtrar(self, criterios):
+        return [Hardware(nombre="Test Item")]
+
+def test_buscar():
+    mock_repo = MockHardwareRepo()
+    svc = BuscadorHardware(mock_repo)
+    
+    resultado = svc.buscar(CriteriosBusqueda("test"))
+    assert len(resultado) == 1
+    assert resultado[0].nombre == "Test Item"
+    
+# SIN necesidad de BD real, SIN HTTP, SIN fixtures complicadas</pre>
+                </div>
+
+                <div class="benefit-box">
+                    <h3>✅ Escalabilidad 📈</h3>
+                    <p>
+                        <strong>Escenario:</strong> Tu empresa crece. Necesitas exponer datos vía gRPC, 
+                        no solo HTTP. También quieres un cron job que actualice precios cada noche.
+                    </p>
+                    <p>
+                        <strong>Con Hexagonal:</strong> Agregas nuevos adaptadores primarios (gRPC, Task) 
+                        que llaman al mismo dominio. Cero cambios en la lógica.
+                    </p>
+                    <pre class="mt-20">// ADAPTADOR gRPC (Nuevo)
+class GrpcHardwareService(pb2.HardwareServicer):
+    def CrearItem(self, req, ctx):
+        svc = HardwareService(repo)
+        resultado = svc.crear(req)
+        return ConvertirAGrpc(resultado)
+
+// ADAPTADOR Task Scheduler (Nuevo)
+@scheduled_task(every.night)
+def actualizar_precios():
+    svc = HardwareService(repo)
+    svc.aplicar_descuento_masivo()
+
+// El dominio NO cambia. Los adaptadores nuevos simplemente 
+// apuntan a la misma lógica.</pre>
+                </div>
+
+                <div class="benefit-box">
+                    <h3>✅ Evita Anemia de Dominio 🧠</h3>
+                    <p>
+                        <strong>Tu código actual:</strong> Los Models y Schemas son getters/setters.
+                    </p>
+                    <p>
+                        <strong>Con Hexagonal:</strong> Las entidades de dominio tienen comportamiento puro.
+                    </p>
+                    <pre class="mt-20">// POBRE (Actual) - Anemia
+class HardwareItem(Base):
+    stock = Column(Integer)
+    
+    # Sin métodos. Es solo un contenedor de datos.
+
+// RICO (Hexagonal) - Con Comportamiento
+class HardwareEntity(ValueObject):
+    def __init__(self, nombre, stock):
+        if stock < 0:
+            raise DomainException("Stock no puede ser negativo")
+        self.nombre = nombre
+        self._stock = stock  # Privado!
+    
+    def reducir_stock(self, cantidad):
+        if cantidad > self._stock:
+            raise InsufficientStockException()
+        return HardwareEntity(self.nombre, self._stock - cantidad)
+    
+    def puede_vender(self, cantidad):
+        return cantidad <= self._stock</pre>
+                </div>
+
+                <div class="benefit-box">
+                    <h3>✅ Flexibilidad Tecnológica 🔄</h3>
+                    <p>
+                        <strong>Escenario:</strong> Te enamoraste de DDD (Domain-Driven Design) y quieres 
+                        migrar a Event Sourcing. O cambiar FastAPI por Quart (async). O reemplazar SQLite 
+                        por PostgreSQL con Redis cache.
+                    </p>
+                    <p>
+                        <strong>Con Hexagonal:</strong> Los adaptadores pueden cambiar sin que el dominio 
+                        se entere. Es como cambiar baterías en un control remoto.
+                    </p>
+                    <table>
+                        <tr>
+                            <th>Cambio</th>
+                            <th>Impacto si NO usas Hexagonal</th>
+                            <th>Impacto con Hexagonal</th>
+                        </tr>
+                        <tr>
+                            <td>SQLite → PostgreSQL</td>
+                            <td>Reescribir models.py, queries</td>
+                            <td>Actualizar solo adaptador</td>
+                        </tr>
+                        <tr>
+                            <td>FastAPI → Flask</td>
+                            <td>Reescribir todos los endpoints</td>
+                            <td>Nuevo controlador in Flask</td>
+                        </tr>
+                        <tr>
+                            <td>Agregar Redis cache</td>
+                            <td>Reescribir quizás queries</td>
+                            <td>Nuevo adaptador cache</td>
+                        </tr>
+                        <tr>
+                            <td>Event Sourcing</td>
+                            <td>Casi reescribir todo</td>
+                            <td>Nuevo adaptador de persistencia</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="benefit-box">
+                    <h3>✅ Documentación Automática 📚</h3>
+                    <p>
+                        En Hexagonal, tus puertos <strong>son</strong> la documentación. 
+                        Dicen exactamente qué debe hacer cada adaptador.
+                    </p>
+                    <pre class="mt-20"># Los puertos hablan por sí solos
+class HardwareRepositoryPort(ABC):
+    @abstractmethod
+    def guardar(self, entity: HardwareEntity) -> None:
+        """Persiste un HardwareEntity en almacenamiento."""
+        pass
+    
+    @abstractmethod
+    def obtener(self, id: HardwareId) -> Optional[HardwareEntity]:
+        """Obtiene un item por ID. None si no existe."""
+        pass
+    
+    @abstractmethod
+    def obtener_por_categoria(self, cat: Categoria) -> List[HardwareEntity]:
+        """Retorna todos los items de una categoría."""
+        pass
+    
+    # Todo está explícito. No hay ambigüedad.</pre>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- TAB 5: RECOMENDACIONES -->
+        <div id="recomendaciones" class="tab-content">
+            <section>
+                <h2>5️⃣ Recomendaciones de Refactorización</h2>
+
+                <div class="alert alert-info">
+                    <strong>⚡ Nota Importante:</strong> No necesitas refactorizar todo al mismo tiempo. 
+                    La arquitectura hexagonal se puede implementar incrementalmente.
+                </div>
+
+                <h3>Paso 1: Crear la Estructura de Puertos</h3>
+
+                <pre>proyecto/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                          # Adaptadores primarios (Controllers)
+│   ├── database.py                      # Config DB
+│   │
+│   ├── domain/                          # ★ NUEVO
+│   │   ├── __init__.py
+│   │   ├── entities/                    # Objetos puros del dominio
+│   │   │   ├── hardware.py              # HardwareEntity (no ORM, puro)
+│   │   │   ├── categoria.py             # CategoriaValueObject
+│   │   │   └── precio.py                # PrecioValueObject
+│   │   │
+│   │   ├── services/                    # Lógica de negocio
+│   │   │   ├── hardware_service.py      # Casos de uso: crear, actualizar
+│   │   │   └── busqueda_service.py      # Lógica de búsqueda
+│   │   │
+│   │   └── ports/                       # ★ PUERTOS (Interfaces)
+│   │       ├── __init__.py
+│   │       ├── repository_port.py       # Contrato para persistencia
+│   │       └── email_port.py            # Contrato para notificaciones
+│   │
+│   ├── adapters/                        # Implementaciones de puertos
+│   │   ├── __init__.py
+│   │   │
+│   │   ├── primary/                     # Entrada (controladores HTTP, CLI)
+│   │   │   ├── http/
+│   │   │   │   ├── controllers.py       # Endpoints FastAPI
+│   │   │   │   └── schemas.py           # DTOs para HTTP
+│   │   │   └── cli/                     # Comandos CLI (opcional)
+│   │   │
+│   │   └── secondary/                   # Salida (persistencia, externos)
+│   │       ├── sqalchemy_adapter.py     # Implementa RepositoryPort
+│   │       └── sendgrid_adapter.py      # Implementa EmailPort
+│   │
+│   ├── models.py                        # Modelos SQLAlchemy (solo para BD)
+│   ├── schemas.py                       # DTOs Pydantic (solo HTTP)
+│   └── crud.py                          # ← ELIMINAR ESTE (reemplazar)</pre>
+
+                <h3>Paso 2: Crear Entidades de Dominio Puras</h3>
+
+                <pre>// domain/entities/hardware.py
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class HardwareEntity:
+    """Entidad de dominio pura. Cero dependencias a frameworks."""
+    nombre: str
+    categoria: str  # CategoriaValueObject en versión completa
+    stock: int
+    precio: float
+    
+    def __post_init__(self):
+        # Invariantes del dominio
+        if self.stock < 0:
+            raise ValueError("Stock no puede ser negativo")
+        if self.precio <= 0:
+            raise ValueError("Precio debe ser positivo")
+        if not self.nombre.strip():
+            raise ValueError("Nombre req uerido")
+    
+    def reducir_stock(self, cantidad: int) -> 'HardwareEntity':
+        """Valida y crea nueva entidad con stock reducido."""
+        if cantidad > self.stock:
+            raise InsufficientStockError(
+                f"No hay suficiente stock. Disponible: {self.stock}, solicitado: {cantidad}"
+            )
+        return HardwareEntity(
+            nombre=self.nombre,
+            categoria=self.categoria,
+            stock=self.stock - cantidad,
+            precio=self.precio,
+        )
+    
+    def es_bajo_stock(self, umbral: int = 10) -> bool:
+        """Business rule: considera bajo stock < umbral."""
+        return self.stock < umbral
+    
+    def valor_inventario(self) -> float:
+        """Calcula valor total de este item."""
+        return self.stock * self.precio</pre>
+
+                <h3>Paso 3: Definir Puertos (Interfaces Abstractas)</h3>
+
+                <pre>// domain/ports/repository_port.py
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from domain.entities.hardware import HardwareEntity
+
+class HardwareRepositoryPort(ABC):
+    """Contrato que cualquier repositorio debe cumplir."""
+    
+    @abstractmethod
+    async def guardar(self, entity: HardwareEntity) -> int:
+        """Guarda una entidad. Retorna el ID asignado."""
+        pass
+    
+    @abstractmethod
+    async def obtener(self, id: int) -> Optional[HardwareEntity]:
+        """Obtiene una entidad por ID."""
+        pass
+    
+    @abstractmethod
+    async def obtener_todos(self, skip: int = 0, limit: int = 100
+                          ) -> List[HardwareEntity]:
+        """Obtiene múltiples entidades con paginación."""
+        pass
+    
+    @abstractmethod
+    async def obtener_por_categoria(self, categoria: str) -> List[HardwareEntity]:
+        """Obtiene items de una categoría."""
+        pass
+    
+    @abstractmethod
+    async def buscar_por_nombre(self, nombre: str) -> List[HardwareEntity]:
+        """Busca items cuyo nombre contenga el texto."""
+        pass</pre>
+
+                <h3>Paso 4: Servicio de Dominio (Casos de Uso)</h3>
+
+                <pre>// domain/services/hardware_service.py
+class HardwareService:
+    """Lógica de negocio. Implementación de casos de uso."""
+    
+    def __init__(self, repository: HardwareRepositoryPort):
+        self.repository = repository  # ← Inyección de puerto
+    
+    async def crear_item(self, nombre: str, categoria: str, 
+                        stock: int, precio: float) -> HardwareEntity:
+        """Caso de uso: crear un nuevo item de hardware."""
+        
+        # Validación de dominio
+        entity = HardwareEntity(nombre, categoria, stock, precio)
+        
+        # Persiste usando puerto
+        item_id = await self.repository.guardar(entity)
+        entity.id = item_id
+        
+        # En versión completa, emitirías un evento:
+        # self._emit_event(HardwareCreatedEvent(entity))
+        
+        return entity
+    
+    async def reducir_stock_item(self, item_id: int, cantidad: int) -> HardwareEntity:
+        """Caso de uso: reducir stock (venta)."""
+        # Obtiene usando puerto
+        entity = await self.repository.obtener(item_id)
+        if not entity:
+            raise ItemNotFoundError(f"Item {item_id} no existe")
+        
+        # Aplica lógica de dominio
+        entity_actualizada = entity.reducir_stock(cantidad)
+        
+        # Persiste cambios
+        await self.repository.guardar(entity_actualizada)
+        
+        return entity_actualizada
+    
+    async def buscar_items(self, criterio: str) -> List[HardwareEntity]:
+        """Caso de uso: buscar items."""
+        return await self.repository.buscar_por_nombre(criterio)</pre>
+
+                <h3>Paso 5: Adaptador Secundario (Implementar Puerto)</h3>
+
+                <pre>// adapters/secondary/sqlalchemy_adapter.py
+from domain.ports.repository_port import HardwareRepositoryPort
+from domain.entities.hardware import HardwareEntity
+import sqlalchemy as sa
+
+class SqlAlchemyHardwareRepository(HardwareRepositoryPort):
+    """Implementación del repositorio usando SQLAlchemy."""
+    
+    def __init__(self, session: Session):
+        self.session = session
+    
+    async def guardar(self, entity: HardwareEntity) -> int:
+        # Mapea HardwareEntity (dominio) a HardwareItem (ORM)
+        db_item = HardwareItem(
+            nombre=entity.nombre,
+            categoria=entity.categoria,
+            stock=entity.stock,
+            precio=entity.precio,
+        )
+        self.session.add(db_item)
+        self.session.commit()
+        self.session.refresh(db_item)
+        return db_item.id
+    
+    async def obtener(self, id: int) -> Optional[HardwareEntity]:
+        db_item = self.session.query(HardwareItem).filter(
+            HardwareItem.id == id
+        ).first()
+        
+        if not db_item:
+            return None
+        
+        # Mapea HardwareItem (ORM) a HardwareEntity (dominio)
+        return HardwareEntity(
+            nombre=db_item.nombre,
+            categoria=db_item.categoria.value,
+            stock=db_item.stock,
+            precio=db_item.precio,
+        )
+    
+    # ... otros métodos del puerto</pre>
+
+                <h3>Paso 6: Adaptador Primario (Controlador HTTP)</h3>
+
+                <pre>// adapters/primary/http/controllers.py
+from fastapi import APIRouter, Depends
+from domain.services.hardware_service import HardwareService
+from domain.ports.repository_port import HardwareRepositoryPort
+from adapters.secondary.sqlalchemy_adapter import SqlAlchemyHardwareRepository
+from adapters.primary.http.schemas import CreateHardwareRequest, HardwareResponse
+
+router = APIRouter(prefix="/api")
+
+@router.post("/items")
+async def crear_item(
+    request: CreateHardwareRequest,
+    db: Session = Depends(get_db),
+) -> HardwareResponse:
+    """Controlador: Interpreta HTTP y delega al servicio."""
+    
+    # 1. Crear puerto/adaptador
+    repository: HardwareRepositoryPort = SqlAlchemyHardwareRepository(db)
+    
+    # 2. Crear servicio (inyecta puerto)
+    service = HardwareService(repository)
+    
+    # 3. Llamar caso de uso
+    entity = await service.crear_item(
+        nombre=request.nombre,
+        categoria=request.categoria,
+        stock=request.stock,
+        precio=request.precio,
+    )
+    
+    # 4. Adaptar respuesta a HTTP
+    return HardwareResponse(
+        nombre=entity.nombre,
+        categoria=entity.categoria,
+        stock=entity.stock,
+        precio=entity.precio,
+    )
+
+@router.get("/items/{item_id}")
+async def obtener_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+) -> HardwareResponse:
+    """Obtener un item."""
+    repository = SqlAlchemyHardwareRepository(db)
+    service = HardwareService(repository)
+    
+    entity = await service.obtener_item(item_id)
+    if not entity:
+        raise HTTPException(status_code=404)
+    
+    return HardwareResponse.from_entity(entity)</pre>
+
+            </section>
+        </div>
+
+        <!-- TAB 6: RUTA DE ACCIÓN -->
+        <div id="ruta" class="tab-content">
+            <section>
+                <h2>6️⃣ Plan de Acción (Road Map de 4 Fases)</h2>
+
+                <div class="alert alert-success">
+                    Este plan es <strong>incremental</strong>. Puedes aplicarlo gradualmente sin 
+                    romper tu aplicación actual.
+                </div>
+
+                <h3>FASE 1: Preparación (Semana 1)</h3>
+                <div class="content-box">
+                    <h4>Objetivos</h4>
+                    <ul>
+                        <li>Crear estructura de carpetas para Domain Layer</li>
+                        <li>Definir puertos (interfaces abstractas)</li>
+                        <li>No tocar la información que funciona</li>
+                    </ul>
+
+                    <h4>Tareas Específicas</h4>
+                    <ol class="num-list">
+                        <li>
+                            Crear carpeta <code>app/domain/</code> con subcarpetas:
+                            <pre>app/domain/
+├── entities/
+├── services/
+├── ports/
+└── exceptions.py  # Excepciones de dominio personalizadas</pre>
+                        </li>
+
+                        <li>
+                            Definir puertos abstractos en <code>app/domain/ports/</code>:
+                            <pre># Mínimo viable
+class HardwareRepositoryPort(ABC):
+    @abstractmethod
+    async def guardar(self, entity): pass
+    
+    @abstractmethod
+    async def obtener(self, id): pass
+    
+    @abstractmethod
+    async def obtener_todos(self, skip, limit): pass</pre>
+                        </li>
+
+                        <li>
+                            Crear excepción personalizada para dominio:
+                            <pre>class DomainException(Exception):
+    """Base para excepciones de dominio."""
+    pass
+
+class InsufficientStockError(DomainException):
+    pass
+
+class ItemNotFoundError(DomainException):
+    pass</pre>
+                        </li>
+                    </ol>
+
+                    <h4>Validación</h4>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>✅ Las carpetas existen pero están vacías</li>
+                        <li>✅ Los puertos están definidos pero sin implementación</li>
+                        <li>✅ Tu aplicación sigue funcionando igual</li>
+                    </ul>
+                </div>
+
+                <h3>FASE 2: Crear Capas de Dominio (Semanas 2-3)</h3>
+                <div class="content-box">
+                    <h4>Objetivos</h4>
+                    <ul>
+                        <li>Extraer entidades puras del dominio</li>
+                        <li>Mover lógica de negocio a servicios de dominio</li>
+                        <li>Mantener adaptadores existentes (FastAPI, SQLAlchemy)</li>
+                    </ul>
+
+                    <h4>Tareas Específicas</h4>
+                    <ol class="num-list">
+                        <li>
+                            <strong>Crear entidad de dominio:</strong>
+                            <pre># app/domain/entities/hardware.py
+@dataclass
+class HardwareEntity:
+    nombre: str
+    categoria: str
+    stock: int
+    precio: float
+    id: Optional[int] = None
+    
+    def __post_init__(self):
+        # Validaciones de invariantes
+        if self.stock < 0:
+            raise InsufficientStockError(...)
+    
+    def reducir_stock(self, cantidad: int):
+        # Lógica pura de dominio
+        if cantidad > self.stock:
+            raise ...
+        return HardwareEntity(..., stock=self.stock - cantidad)</pre>
+                        </li>
+
+                        <li>
+                            <strong>Crear servicio de dominio:</strong>
+                            <pre># app/domain/services/hardware_service.py
+class HardwareService:
+    def __init__(self, repository: HardwareRepositoryPort):
+        self.repository = repository
+    
+    async def crear_item(self, nombre, cat, stock, precio):
+        # Usa la entidad (valida automáticamente)
+        entity = HardwareEntity(nombre, cat, stock, precio)
+        
+        # Delega persistencia al puerto
+        id = await self.repository.guardar(entity)
+        return entity</pre>
+                        </li>
+
+                        <li>
+                            <strong>Integrar servicio a endpoints:</strong>
+                            <pre># Actualizar main.py gradualmente
+@app.post("/api/items")
+async def crear_item(req: CreateRequest, db):
+    repo = SqlAlchemyHardwareRepository(db)
+    service = HardwareService(repo)  # ← Nuevo
+    
+    entity = await service.crear_item(...)  # ← Delega al servicio
+    return HardwareResponse.from_entity(entity)</pre>
+                        </li>
+                    </ol>
+
+                    <h4>Validación</h4>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>✅ Las entidades de dominio funcionan sin SQLAlchemy</li>
+                        <li>✅ Los servicios de dominio inyectan puertos</li>
+                        <li>✅ Los endpoints llaman a servicios (no directamente a repo)</li>
+                        <li>✅ Tests de dominio sin BD real</li>
+                    </ul>
+                </div>
+
+                <h3>FASE 3: Migrar Adaptadores (Semanas 4-5)</h3>
+                <div class="content-box">
+                    <h4>Objetivos</h4>
+                    <ul>
+                        <li>Crear implementaciones concretas de puertos</li>
+                        <li>Extraer DTOs de controllers</li>
+                        <li>Separar adaptadores primarios y secundarios</li>
+                    </ul>
+
+                    <h4>Tareas Específicas</h4>
+                    <ol class="num-list">
+                        <li>
+                            <strong>Crear adaptador SQLAlchemy:</strong>
+                            <pre># app/adapters/secondary/sqlalchemy_adapter.py
+class SqlAlchemyHardwareRepository(HardwareRepositoryPort):
+    def __init__(self, session):
+        self.session = session
+    
+    async def guardar(self, entity: HardwareEntity) -> int:
+        # Mapea dominio → ORM
+        db_item = HardwareItem(
+            nombre=entity.nombre,
+            categoria=entity.categoria,
+            ...
+        )
+        self.session.add(db_item)
+        self.session.commit()
+        return db_item.id
+    
+    async def obtener(self, id: int):
+        db_item = ...query...
+        # Mapea ORM → dominio
+        return HardwareEntity(...)</pre>
+                        </li>
+
+                        <li>
+                            <strong>Extraer controladores HTTP:</strong>
+                            <pre># app/adapters/primary/http/controllers.py
+router = APIRouter(prefix="/api")
+
+@router.post("/items")
+async def crear_item(request: CreateRequest, db):
+    repo = SqlAlchemyHardwareRepository(db)
+    service = HardwareService(repo)
+    entity = await service.crear_item(...)
+    
+    # Adapta dominio → respuesta HTTP
+    return CreateResponse(from_entity=entity)</pre>
+                        </li>
+
+                        <li>
+                            <strong>Refactorizar schemas:</strong>
+                            <pre># Schemas SOLO para HTTP, no para dominio
+class CreateHardwareRequest(BaseModel):
+    nombre: str
+    categoria: str
+    stock: int
+    precio: float
+
+class HardwareResponse(BaseModel):
+    id: int
+    nombre: str
+    ...
+    
+    @classmethod
+    def from_entity(cls, entity: HardwareEntity):
+        return cls(id=entity.id, ...)</pre>
+                        </li>
+                    </ol>
+
+                    <h4>Validación</h4>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>✅ Adaptadores implementan puertos</li>
+                        <li>✅ DTOs están separados del dominio</li>
+                        <li>✅ Mapeos entidad ↔ ORM están centralizados</li>
+                        <li>✅ Aplicación sigue funcionando</li>
+                    </ul>
+                </div>
+
+                <h3>FASE 4: Cleanup y Testing (Semana 6+)</h3>
+                <div class="content-box">
+                    <h4>Objetivos</h4>
+                    <ul>
+                        <li>Eliminar código duplicado/obsoleto</li>
+                        <li>Agregar tests de integración</li>
+                        <li>Documentar arquitectura</li>
+                    </ul>
+
+                    <h4>Tareas Específicas</h4>
+                    <ol class="num-list">
+                        <li>
+                            <strong>Eliminar crud.py (reemplazado por adaptadores):</strong>
+                            <pre># Antes (a eliminar)
+app/crud.py  ← La lógica está ahora en:
+             - domain/services/  (lógica pura)
+             - adapters/secondary/  (persistencia)</pre>
+                        </li>
+
+                        <li>
+                            <strong>Tests de dominio (sin dependencias externas):</strong>
+                            <pre># tests/domain/test_hardware_entity.py
+def test_reducir_stock_valido():
+    entity = HardwareEntity("CPU", "Electrónica", 100, 50.0)
+    updated = entity.reducir_stock(30)
+    
+    assert updated.stock == 70
+    assert entity.stock == 100  # Inmutabilidad
+
+def test_reducir_stock_insuficiente():
+    entity = HardwareEntity("CPU", "Electrónica", 10, 50.0)
+    
+    with pytest.raises(InsufficientStockError):
+        entity.reducir_stock(20)  # Error! Solo hay 10</pre>
+                        </li>
+
+                        <li>
+                            <strong>Tests de servicio (con mock):</strong>
+                            <pre># tests/domain/test_hardware_service.py
+class MockRepository(HardwareRepositoryPort):
+    async def guardar(self, entity):
+        return 123  # ID simulado
+
+@pytest.mark.asyncio
+async def test_crear_item():
+    repo = MockRepository()
+    service = HardwareService(repo)
+    
+    entity = await service.crear_item("CPU", "Electrónica", 100, 50)
+    
+    assert entity.nombre == "CPU"
+    # SIN BD real, SIN HTTP, SIN fixtures complejas</pre>
+                        </li>
+
+                        <li>
+                            <strong>Tests de integración (con adaptadores reales):</strong>
+                            <pre># tests/integration/test_criar_item_end_to_end.py
+@pytest.mark.asyncio
+async def test_crear_item_completo(db_session):
+    # Usa adaptador real pero en BD de test
+    repo = SqlAlchemyHardwareRepository(db_session)
+    service = HardwareService(repo)
+    
+    entity = await service.crear_item(...)
+    
+    # Verifica en BD
+    saved = await repo.obtener(entity.id)
+    assert saved.nombre == entity.nombre</pre>
+                        </li>
+                    </ol>
+
+                    <h4>Validación</h4>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>✅ Tests de dominio puro (rápidos, confiables)</li>
+                        <li>✅ Tests de integración (verifican adaptadores</li>
+                        <li>✅ Cobertura >80%</li>
+                        <li>✅ No hay código muerto</li>
+                    </ul>
+                </div>
+
+                <h3>Timeline Visual 📅</h3>
+
+                <div class="diagram-container">
+                    <div class="mermaid" id="timeline">
+timeline
+    title Roadmap de Refactorización a Arquitectura Hexagonal
+    
+    section FASE 1
+    Semana 1 : Crear estructura de carpetas
+          : Definir puertos (interfaces)
+          : Crear excepciones de dominio
+    
+    section FASE 2
+    Semana 2-3 : Crear entidades puras
+               : Crear servicios de dominio
+               : Integrar servicios a endpoints
+    
+    section FASE 3
+    Semana 4-5 : Implementar puertos (SQLAlchemy)
+               : Extraer controladores HTTP
+               : Separar DTOs de dominio
+    
+    section FASE 4
+    Semana 6+ : Tests de dominio
+             : Tests de integración
+             : Eliminar código obsoleto
+             : Documentación final
+    
+    section Resultado
+    Final : ✅ Arquitectura Hexagonal completa
+         : ✅ Código testeable y mantenible
+         : ✅ Preparado para escalabilidad
+                    </div>
+                </div>
+
+                <h3>Checklist de Implementación ✅</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>FASE</th>
+                            <th>Completado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Estructura: <code>app/domain/</code>, <code>app/adapters/</code></td>
+                            <td>1</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Puertos: HardwareRepositoryPort, EmailServicePort</td>
+                            <td>1</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Excepciones de dominio personalizadas</td>
+                            <td>1</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Entidad: HardwareEntity con invariantes</td>
+                            <td>2</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Servicio: HardwareService con casos de uso</td>
+                            <td>2</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Endpoints actualizados para usar servicios</td>
+                            <td>2</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Adaptador: SqlAlchemyHardwareRepository implementando puerto</td>
+                            <td>3</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Controladores HTTP en <code>adapters/primary/</code></td>
+                            <td>3</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>DTOs separados de entidades de dominio</td>
+                            <td>3</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Tests de dominio sin dependencias externas</td>
+                            <td>4</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Tests de integración con adaptadores</td>
+                            <td>4</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Eliminar crud.py obsoleto</td>
+                            <td>4</td>
+                            <td>☐</td>
+                        </tr>
+                        <tr>
+                            <td>Documentación de arquitectura</td>
+                            <td>4</td>
+                            <td>☐</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </section>
+
+            <section>
+                <h3>Próximos Pasos Inmediatos 🚀</h3>
+
+                <div class="content-box highlight">
+                    <h4>Acción #1 (Hoy): Evalúa la Propuesta</h4>
+                    <ul>
+                        <li>Lee este documento completamente</li>
+                        <li>Visualiza los diagramas Mermaid</li>
+                        <li>Considera si los beneficios se ajustan a tus necesidades</li>
+                    </ul>
+                </div>
+
+                <div class="content-box highlight">
+                    <h4>Acción #2 (Esta Semana): Planificación</h4>
+                    <ul>
+                        <li>Decide si ejecutar todas las fases o parcialmente</li>
+                        <li>Asigna tiempo: ~4-6 semanas para refactorización completa</li>
+                        <li>Identifica riesgos (cambios en equipos, deadlines)</li>
+                    </ul>
+                </div>
+
+                <div class="content-box highlight">
+                    <h4>Acción #3 (Siguiente Semana): Inicio FASE 1</h4>
+                    <ul>
+                        <li>Crea carpetas de estructura</li>
+                        <li>Define puertos como interfaces Python abstractas</li>
+                        <li>Escribe pruebas unitarias para tu primer dominio</li>
+                    </ul>
+                </div>
+
+            </section>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>📖 Documento Generado: Análisis Arquitectónico de Cyber-Inventory</p>
+        <p>🏗️ Patrón: Arquitectura Hexagonal (Puertos y Adaptadores)</p>
+        <p>⚙️ Stack: FastAPI 0.104.1 | SQLAlchemy 2.0.23 | Pydantic 2.5.0 | SQLite3</p>
+        <p style="margin-top: 20px; font-size: 0.85em; color: var(--color-texto-oscuro);">
+            Este análisis es una recomendación técnica. La implementación depende de tus necesidades, 
+            recursos y timeline del proyecto.
+        </p>
+    </footer>
+
+    <script>
+        // Inicializa Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Tab switching
+        function showTab(tabName) {
+            // Ocultar todos los tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remover active de botones
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(btn => btn.classList.remove('active'));
+
+            // Mostrar tab seleccionado y activar botón
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Renderiza diagramas cuando la página carga
+        window.addEventListener('load', () => {
+            if (window.mermaid) {
+                mermaid.contentLoaded();
+            }
+        });
+    </script>
+</body>
+</html>

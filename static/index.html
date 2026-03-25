@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Inventory | Hardware Management System</title>
+    <style>
+        /* ==================== VARIABLES DE DISEÑO ====================*/
+        :root {
+            --color-fondo: #0d0d0d;
+            --color-panel: #1a1a1a;
+            --color-cian: #00d4ff;
+            --color-magenta: #ff00ff;
+            --color-verde: #00ff00;
+            --color-texto: #e0e0e0;
+            --color-texto-oscuro: #808080;
+            --font-mono: 'Courier New', 'Lucida Console', monospace;
+            --sombra-cian: 0 0 10px rgba(0, 212, 255, 0.5);
+            --sombra-magenta: 0 0 10px rgba(255, 0, 255, 0.5);
+            --transicion: all 0.3s ease;
+        }
+
+        /* ==================== RESET GLOBAL ====================*/
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ==================== HEADER ====================*/
+        header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+            border-bottom: 2px solid var(--color-cian);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--sombra-cian);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-cian);
+            text-shadow: 0 0 10px var(--color-cian), 0 0 20px var(--color-magenta);
+            letter-spacing: 2px;
+        }
+
+        .stats-header {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--color-texto-oscuro);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            color: var(--color-cian);
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: var(--sombra-cian);
+        }
+
+        /* ==================== CONTAINER PRINCIPAL ====================*/
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ==================== NAVEGACIÓN ====================*/
+        nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background-color: var(--color-panel);
+            color: var(--color-cian);
+            border: 1px solid var(--color-cian);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: var(--transicion);
+            box-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(0, 212, 255, 0.1);
+            box-shadow: var(--sombra-cian);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background-color: var(--color-cian);
+            color: var(--color-fondo);
+            box-shadow: var(--sombra-cian);
+        }
+
+        /* ==================== SECCIONES ====================*/
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==================== PANEL DE CREACIÓN ====================*/
+        .form-panel {
+            background-color: var(--color-panel);
+            border: 2px solid var(--color-magenta);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .form-panel h2 {
+            color: var(--color-magenta);
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-shadow: var(--sombra-magenta);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: var(--color-cian);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            background-color: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--color-cian);
+            color: var(--color-texto);
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            transition: var(--transicion);
+            border-radius: 2px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--color-magenta);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            background-color: rgba(255, 0, 255, 0.05);
+        }
+
+        /* ==================== BOTONES ====================*/
+        .btn {
+            padding: 11px 22px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid;
+            cursor: pointer;
+            transition: var(--transicion);
+            border-radius: 2px;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: var(--color-cian);
+            color: var(--color-fondo);
+            border-color: var(--color-cian);
+            box-shadow: var(--sombra-cian);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-magenta);
+            border-color: var(--color-magenta);
+            box-shadow: var(--sombra-magenta);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-panel);
+            color: var(--color-magenta);
+            border-color: var(--color-magenta);
+            box-shadow: 0 0 5px rgba(255, 0, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 0, 255, 0.1);
+            box-shadow: var(--sombra-magenta);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        .btn-danger:hover {
+            background-color: rgba(255, 0, 0, 0.4);
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .btn-success {
+            background-color: rgba(0, 255, 0, 0.2);
+            color: var(--color-verde);
+            border-color: var(--color-verde);
+        }
+
+        .btn-success:hover {
+            background-color: rgba(0, 255, 0, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+
+        /* ==================== TABLA ====================*/
+        .table-container {
+            background-color: var(--color-panel);
+            border: 2px solid var(--color-cian);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: var(--sombra-cian);
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.2) 0%, rgba(255, 0, 255, 0.2) 100%);
+            border-bottom: 2px solid var(--color-cian);
+        }
+
+        th {
+            padding: 12px;
+            color: var(--color-cian);
+            text-align: left;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
+            text-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        tbody tr:hover {
+            background-color: rgba(0, 212, 255, 0.1);
+            box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.1);
+        }
+
+        /* ==================== ESTADO ÍTEMS ====================*/
+        .stock-bajo {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .stock-ok {
+            color: var(--color-verde);
+            font-weight: bold;
+        }
+
+        .categoria-badge {
+            background-color: rgba(0, 212, 255, 0.2);
+            color: var(--color-cian);
+            padding: 6px 12px;
+            border-radius: 2px;
+            font-size: 12px;
+            border: 1px solid var(--color-cian);
+            display: inline-block;
+            min-width: 140px;
+            text-align: center;
+            white-space: normal;
+        }
+
+        /* ==================== MODAL / DIÁLOGO ====================*/
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--color-panel);
+            border: 2px solid var(--color-magenta);
+            padding: 30px;
+            border-radius: 4px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+        }
+
+        .modal-header {
+            color: var(--color-magenta);
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-shadow: var(--sombra-magenta);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* ==================== ALERTAS ====================*/
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-left: 3px solid;
+            border-radius: 2px;
+            font-size: 13px;
+        }
+
+        .alert-success {
+            background-color: rgba(0, 255, 0, 0.1);
+            border-color: var(--color-verde);
+            color: var(--color-verde);
+        }
+
+        .alert-error {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .alert-info {
+            background-color: rgba(0, 212, 255, 0.1);
+            border-color: var(--color-cian);
+            color: var(--color-cian);
+        }
+
+        /* ==================== BÚSQUEDA ====================*/
+        .search-panel {
+            background-color: var(--color-panel);
+            border: 2px solid var(--color-cian);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-panel input {
+            flex: 1;
+        }
+
+        /* ==================== RESPONSIVE ====================*/
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            nav {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 11px;
+            }
+        }
+
+        /* ==================== ANIMACIONES ====================*/
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--color-cian);
+            }
+            50% {
+                text-shadow: 0 0 20px var(--color-cian), 0 0 30px var(--color-magenta);
+            }
+        }
+
+        .glow-text {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        /* ==================== ESTILOS DE CARGA ====================*/
+        .loading {
+            display: inline-block;
+            color: var(--color-cian);
+        }
+
+        .loading::after {
+            content: '';
+            animation: dots 1.5s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% {
+                content: '';
+            }
+            40% {
+                content: '.';
+            }
+            60% {
+                content: '..';
+            }
+            80%, 100% {
+                content: '...';
+            }
+        }
+
+        /* ==================== PIE DE PÁGINA ====================*/
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--color-texto-oscuro);
+            border-top: 1px solid rgba(0, 212, 255, 0.2);
+            margin-top: 40px;
+            font-size: 12px;
+        }
+
+        .footer-divider {
+            color: var(--color-cian);
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ==================== HEADER ====================-->
+    <header>
+        <div class="logo">⚡ CYBER-INVENTORY ⚡</div>
+    </header>
+
+    <div class="container">
+        <!-- ==================== NAVEGACIÓN ====================-->
+        <nav>
+            <button class="nav-btn active" data-section="dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-section="crear">➕ Crear Ítem</button>
+            <button class="nav-btn" data-section="inventario">📦 Inventario</button>
+            <button class="nav-btn" data-section="buscar">🔍 Buscar</button>
+        </nav>
+
+        <!-- ==================== SECCIÓN DASHBOARD ====================-->
+        <section id="dashboard" class="content-section active">
+            <div class="form-panel">
+                <h2>📊 Panel de Control</h2>
+                <div id="dashboardStats"></div>
+            </div>
+
+            <!-- Estadísticas principales -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <div class="form-panel" style="border: 2px solid var(--color-cian);">
+                    <h3 style="color: var(--color-cian); margin-bottom: 10px;">📦 Ítems Totales</h3>
+                    <div style="font-size: 32px; font-weight: bold; color: var(--color-cian);" id="dashTotalItems">0</div>
+                </div>
+                <div class="form-panel" style="border: 2px solid var(--color-cian);">
+                    <h3 style="color: var(--color-cian); margin-bottom: 10px;">💰 Valor Inventario</h3>
+                    <div style="font-size: 32px; font-weight: bold; color: var(--color-cian);" id="dashTotalValue">$0.00</div>
+                </div>
+            </div>
+
+            <!-- Componente MVP -->
+            <div class="form-panel" style="border: 2px solid var(--color-magenta); margin-bottom: 20px;">
+                <h3 style="color: var(--color-magenta); margin-bottom: 15px;">⭐ Componente MVP (Hardware más caro en stock)</h3>
+                <div id="mvpComponent" style="background-color: rgba(255, 0, 255, 0.05); padding: 15px; border-radius: 4px; border: 1px solid var(--color-magenta);">
+                    <div style="text-align: center; color: var(--color-texto-oscuro);">Cargando componente MVP...</div>
+                </div>
+            </div>
+
+            <!-- Botones de acciones -->
+            <div class="form-panel" style="border: 2px solid var(--color-verde); padding: 20px;">
+                <h3 style="color: var(--color-verde); margin-bottom: 15px;">⚙️ Acciones Rápidas</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="triggerCsvImport()">📥 Importación Rápida (CSV)</button>
+                    <button class="btn btn-secondary" onclick="showSection('crear')">➕ Crear Nuevo Ítem</button>
+                    <button class="btn btn-secondary" onclick="showSection('inventario')">📊 Ver Inventario</button>
+                </div>
+                <input type="file" id="csvFileInput" style="display: none;" accept=".csv" onchange="handleCsvFile(event)">
+            </div>
+        </section>
+
+        <!-- ==================== SECCIÓN CREAR ====================-->
+        <section id="crear" class="content-section">
+            <div class="form-panel">
+                <h2>➕ Crear Nuevo Ítem de Hardware</h2>
+                <form id="createForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombre">Nombre del Producto</label>
+                            <input type="text" id="nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria">Categoría</label>
+                            <select id="categoria" required>
+                                <option value="">Selecciona una categoría...</option>
+                                <option value="Microprocesadores">Microprocesadores</option>
+                                <option value="Refrigeradores CPU">Refrigeradores CPU</option>
+                                <option value="Tarjetas Gráficas">Tarjetas Gráficas</option>
+                                <option value="Memoria RAM">Memoria RAM</option>
+                                <option value="Placas Base">Placas Base</option>
+                                <option value="Gabinetes">Gabinetes</option>
+                                <option value="Discos Duros">Discos Duros</option>
+                                <option value="Unidades SSD">Unidades SSD</option>
+                                <option value="Monitores">Monitores</option>
+                                <option value="Fuentes Power">Fuentes Power</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="stock">Stock Inicial</label>
+                            <input type="number" id="stock" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="precio">Precio (USD)</label>
+                            <input type="number" id="precio" min="0.01" step="0.01" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Ítem</button>
+                </form>
+                <div id="createMessage"></div>
+            </div>
+        </section>
+
+        <!-- ==================== SECCIÓN INVENTARIO ====================-->
+        <section id="inventario" class="content-section">
+            <div class="search-panel">
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="sortBy" style="display: block; margin-bottom: 5px; font-size: 12px; color: var(--color-texto-oscuro);">Ordenar por:</label>
+                        <select id="sortBy" class="btn" style="padding: 8px 10px; cursor: pointer; background-color: var(--color-panel); color: var(--color-cian); border: 1px solid var(--color-cian); border-radius: 2px; width: 100%;" onchange="updateInventorySort()">
+                            <option value="default">Por defecto (ID)</option>
+                            <option value="stock_desc">Mayor stock</option>
+                            <option value="stock_asc">Menor stock</option>
+                            <option value="precio_desc">Mayor precio</option>
+                            <option value="precio_asc">Menor precio</option>
+                            <option value="categoria_asc">Categorías (A-Z)</option>
+                            <option value="categoria_desc">Categorías (Z-A)</option>
+                            <option value="nombre_asc">Artículos (A-Z)</option>
+                            <option value="nombre_desc">Artículos (Z-A)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="filterCategoria" style="display: block; margin-bottom: 5px; font-size: 12px; color: var(--color-texto-oscuro);">Filtrar categoría:</label>
+                        <input type="text" id="filterCategoria" placeholder="Ej: Microprocesadores" style="width: 100%; padding: 8px 10px;" onkeyup="autoFilterCategory()">
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-small" onclick="filterByCategory()">Buscar por categoría</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadInventory()">Mostrar Todos</button>
+                </div>
+            </div>
+
+            <!-- ==================== CONTROLES DE PAGINACIÓN ====================-->
+            <div style="background-color: var(--color-panel); border: 1px solid var(--color-cian); padding: 15px; margin-bottom: 20px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="itemsPerPage" style="font-size: 12px; color: var(--color-texto-oscuro); text-transform: uppercase;">Items por página:</label>
+                    <select id="itemsPerPage" class="btn" style="padding: 8px 10px; cursor: pointer; background-color: var(--color-panel); color: var(--color-cian); border: 1px solid var(--color-cian); border-radius: 2px; width: auto;" onchange="changeItemsPerPage()">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100" selected>100</option>
+                    </select>
+                </div>
+                <div style="font-size: 12px; color: var(--color-texto); text-align: center;">
+                    <span id="paginationInfo">Página 1 de 1</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Stock</th>
+                            <th>Precio</th>
+                            <th>Valor Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTable">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--color-texto-oscuro);">
+                                Cargando inventario...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ==================== CONTROLES DE NAVEGACIÓN ====================-->
+            <div style="background-color: var(--color-panel); border: 1px solid var(--color-cian); padding: 15px; margin-top: 20px; border-radius: 4px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-secondary btn-small" id="prevBtn" onclick="previousPage()" style="cursor: pointer;">◀ Anterior</button>
+                <div id="pageNumbers" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;"></div>
+                <button class="btn btn-secondary btn-small" id="nextBtn" onclick="nextPage()" style="cursor: pointer;">Siguiente ▶</button>
+            </div>
+        </section>
+
+        <!-- ==================== SECCIÓN BÚSQUEDA ====================-->
+        <section id="buscar" class="content-section">
+            <div class="search-panel">
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="searchQuery" style="display: block; margin-bottom: 5px; font-size: 12px; color: var(--color-texto-oscuro);">Buscar artículo:</label>
+                        <input type="text" id="searchQuery" placeholder="Buscar por nombre..." style="width: 100%; padding: 8px 10px;" onkeypress="handleSearchEnter(event)">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="sortBySearch" style="display: block; margin-bottom: 5px; font-size: 12px; color: var(--color-texto-oscuro);">Ordenar por:</label>
+                        <select id="sortBySearch" class="btn" style="padding: 8px 10px; cursor: pointer; background-color: var(--color-panel); color: var(--color-cian); border: 1px solid var(--color-cian); border-radius: 2px; width: 100%;" onchange="reApplySortOnSearch()">
+                            <option value="default">Por defecto (ID)</option>
+                            <option value="stock_desc">Mayor stock</option>
+                            <option value="stock_asc">Menor stock</option>
+                            <option value="precio_desc">Mayor precio</option>
+                            <option value="precio_asc">Menor precio</option>
+                            <option value="categoria_asc">Categorías (A-Z)</option>
+                            <option value="categoria_desc">Categorías (Z-A)</option>
+                            <option value="nombre_asc">Artículos (A-Z)</option>
+                            <option value="nombre_desc">Artículos (Z-A)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="filterCategoriaSearch" style="display: block; margin-bottom: 5px; font-size: 12px; color: var(--color-texto-oscuro);">Filtrar categoría:</label>
+                        <input type="text" id="filterCategoriaSearch" placeholder="Ej: Microprocesadores" style="width: 100%; padding: 8px 10px;">
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-small" onclick="searchByName()">Buscar</button>
+                    <button class="btn btn-secondary btn-small" onclick="filterSearchResults()">Filtrar por categoría</button>
+                    <button class="btn btn-secondary btn-small" onclick="clearSearchResults()">Limpiar Búsqueda</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Stock</th>
+                            <th>Precio</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="searchTable">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--color-texto-oscuro);">
+                                Ingresa un término de búsqueda...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== MODAL DE EDICIÓN ====================-->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Editar Ítem</div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="editNombre">Nombre</label>
+                    <input type="text" id="editNombre">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="editStock">Stock</label>
+                    <input type="number" id="editStock" min="0">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="editPrecio">Precio</label>
+                    <input type="number" id="editPrecio" min="0.01" step="0.01">
+                </div>
+                <div id="editMessage"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== FOOTER ====================-->
+    <footer>
+        <span>© 2026 Cyber-Inventory MVP</span>
+        <span class="footer-divider">|</span>
+        <span>Full Stack Hardware Management System</span>
+    </footer>
+
+    <script>
+        // ==================== CONFIGURACIÓN API ====================
+        const API_URL = 'http://localhost:8000/api';
+
+        // ==================== STATE ====================
+        let currentItems = [];
+        let currentSortType = 'default';
+        let currentEditingId = null;
+        let currentPage = 1;
+        let itemsPerPage = 100;
+        let totalItems = 0;
+        let totalPages = 1;
+
+        // ==================== INICIALIZACIÓN ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadInventory();
+            loadStats();
+            setInterval(loadStats, 5000); // Actualizar stats cada 5 segundos
+        });
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            // Navegación
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const section = e.target.dataset.section;
+                    showSection(section);
+                });
+            });
+
+            // Formulario de creación
+            document.getElementById('createForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                createItem();
+            });
+
+            // Formulario de edición
+            document.getElementById('editForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                updateItem();
+            });
+        }
+
+        // ==================== NAVEGACIÓN ====================
+        function showSection(sectionId) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Marcar botón como activo
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar sección activa
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+
+            if (sectionId === 'inventario') {
+                loadInventory();
+            }
+        }
+
+        // ==================== OPERACIONES CRUD ====================
+        async function createItem() {
+            const nombre = document.getElementById('nombre').value;
+            const categoria = document.getElementById('categoria').value;
+            const stock = parseInt(document.getElementById('stock').value);
+            const precio = parseFloat(document.getElementById('precio').value);
+
+            const messageDiv = document.getElementById('createMessage');
+
+            try {
+                const response = await fetch(`${API_URL}/items`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, categoria, stock, precio })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.detail || 'Error al crear el ítem');
+                }
+
+                showAlert(messageDiv, 'Ítem creado exitosamente ✓', 'success');
+                document.getElementById('createForm').reset();
+                loadInventory();
+                loadStats();
+
+                setTimeout(() => {
+                    showSection('inventario');
+                }, 1500);
+            } catch (error) {
+                showAlert(messageDiv, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function updateItem() {
+            const id = document.getElementById('editId').value;
+            const nombre = document.getElementById('editNombre').value;
+            const stock = parseInt(document.getElementById('editStock').value);
+            const precio = parseFloat(document.getElementById('editPrecio').value);
+
+            const messageDiv = document.getElementById('editMessage');
+
+            try {
+                const response = await fetch(`${API_URL}/items/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, stock, precio })
+                });
+
+                if (!response.ok) throw new Error('Error al actualizar');
+
+                showAlert(messageDiv, 'Ítem actualizado ✓', 'success');
+                closeEditModal();
+                loadInventory();
+                loadStats();
+            } catch (error) {
+                showAlert(messageDiv, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('¿Eliminar este ítem? Esta acción no se puede deshacer.')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/items/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Error al eliminar');
+
+                loadInventory();
+                loadStats();
+                showAlert(document.createElement('div'), 'Ítem eliminado ✓', 'success');
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function adjustStock(id, action, cantidad = 1) {
+            const endpoint = action === 'reduce' ? 'reducir-stock' : 'aumentar-stock';
+            
+            try {
+                const response = await fetch(`${API_URL}/items/${id}/${endpoint}?cantidad=${cantidad}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.detail || 'Error al ajustar stock');
+                }
+
+                loadInventory();
+                loadStats();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // ==================== CARGA DE DATOS ====================
+        async function loadInventory(resetPage = true) {
+            try {
+                // Resetear a página 1 si se solicita
+                if (resetPage) {
+                    currentPage = 1;
+                }
+
+                // Calcular skip basado en página actual
+                const skip = (currentPage - 1) * itemsPerPage;
+                
+                // Obtener parámetros de ordenamiento
+                const { sortBy, order } = getSortParams();
+                
+                // Construir URL con parámetros de paginación Y ordenamiento
+                const url = new URL(`${API_URL}/items`);
+                url.searchParams.append('skip', skip);
+                url.searchParams.append('limit', itemsPerPage);
+                url.searchParams.append('sort_by', sortBy);
+                url.searchParams.append('order', order);
+
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                
+                currentItems = data.items;
+                totalItems = data.total;
+                totalPages = Math.ceil(totalItems / itemsPerPage);
+                
+                renderInventoryTable(data.items);
+                updatePaginationInfo();
+            } catch (error) {
+                console.error('Error cargando inventario:', error);
+            }
+        }
+
+        // Obtener parámetros de ordenamiento basados en el selector
+        function getSortParams() {
+            const sortType = document.getElementById('sortBy').value;
+            
+            const sortMap = {
+                'default': { sortBy: 'id', order: 'desc' },
+                'stock_desc': { sortBy: 'stock', order: 'desc' },
+                'stock_asc': { sortBy: 'stock', order: 'asc' },
+                'precio_desc': { sortBy: 'precio', order: 'desc' },
+                'precio_asc': { sortBy: 'precio', order: 'asc' },
+                'categoria_asc': { sortBy: 'categoria', order: 'asc' },
+                'categoria_desc': { sortBy: 'categoria', order: 'desc' },
+                'nombre_asc': { sortBy: 'nombre_articulo', order: 'asc' },
+                'nombre_desc': { sortBy: 'nombre_articulo', order: 'desc' }
+            };
+            
+            return sortMap[sortType] || sortMap['default'];
+        }
+
+        // Función para actualizar ordenamiento - AHORA HACE FETCH AL SERVIDOR
+        function updateInventorySort() {
+            currentPage = 1; // Ir a página 1 cuando cambies el orden
+            loadInventory(false); // No resetear page nuevamente, ya lo hicimos
+        }
+
+        // ==================== FUNCIONES DE PAGINACIÓN ====================
+        function changeItemsPerPage() {
+            itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            totalPages = Math.ceil(totalItems / itemsPerPage);
+            currentPage = 1; // Resetear a página 1
+            loadInventory(false); // No resetear page nuevamente
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadInventory(false);
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadInventory(false);
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function goToPage(pageNum) {
+            if (pageNum >= 1 && pageNum <= totalPages) {
+                currentPage = pageNum;
+                loadInventory(false);
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function updatePaginationInfo() {
+            // Actualizar información de página
+            const paginationInfo = document.getElementById('paginationInfo');
+            paginationInfo.textContent = `Página ${currentPage} de ${totalPages} (Total: ${totalItems} items)`;
+
+            // Actualizar botones Anterior/Siguiente
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
+            // Generar números de página
+            const pageNumbersContainer = document.getElementById('pageNumbers');
+            pageNumbersContainer.innerHTML = '';
+            
+            // Mostrar un máximo de 5 botones de página
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+
+            // Botón a página 1 si no está visible
+            if (startPage > 1) {
+                const btn = document.createElement('button');
+                btn.textContent = '1';
+                btn.onclick = () => goToPage(1);
+                btn.style.cssText = 'padding: 6px 10px; cursor: pointer; border: 1px solid var(--color-cian); background-color: var(--color-panel); color: var(--color-cian); border-radius: 2px; font-size: 11px;';
+                pageNumbersContainer.appendChild(btn);
+
+                if (startPage > 2) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.cssText = 'padding: 0 5px; color: var(--color-texto-oscuro);';
+                    pageNumbersContainer.appendChild(dots);
+                }
+            }
+
+            // Botones para páginas en rango
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.onclick = () => goToPage(i);
+                btn.style.cssText = `padding: 6px 10px; cursor: pointer; border: 1px solid var(--color-cian); border-radius: 2px; font-size: 11px; 
+                    ${i === currentPage 
+                        ? 'background-color: var(--color-cian); color: var(--color-fondo); font-weight: bold;' 
+                        : 'background-color: var(--color-panel); color: var(--color-cian);'}`;
+                pageNumbersContainer.appendChild(btn);
+            }
+
+            // Botón a última página si no está visible
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.cssText = 'padding: 0 5px; color: var(--color-texto-oscuro);';
+                    pageNumbersContainer.appendChild(dots);
+                }
+
+                const btn = document.createElement('button');
+                btn.textContent = totalPages;
+                btn.onclick = () => goToPage(totalPages);
+                btn.style.cssText = 'padding: 6px 10px; cursor: pointer; border: 1px solid var(--color-cian); background-color: var(--color-panel); color: var(--color-cian); border-radius: 2px; font-size: 11px;';
+                pageNumbersContainer.appendChild(btn);
+            }
+        }
+
+        async function filterByCategory() {
+            const categoria = document.getElementById('filterCategoria').value.trim();
+            console.log('=== filterByCategory ===' );
+            console.log('Categoría actual:', categoria);
+            
+            if (!categoria) {
+                console.log('Campo vacío, cargando todo el inventario');
+                loadInventory();
+                return;
+            }
+
+            try {
+                currentPage = 1;
+                const skip = 0;
+                const sortData = getSortParams();
+                
+                console.log('Sort params:', sortData);
+                
+                const fullUrl = `${API_URL}/items?skip=${skip}&limit=${itemsPerPage}&categoria=${encodeURIComponent(categoria)}&sort_by=${sortData.sortBy}&order=${sortData.order}`;
+                console.log('Request URL:', fullUrl);
+                
+                const response = await fetch(fullUrl);
+                
+                if (!response.ok) {
+                    console.error('Response not OK:', response.status);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                console.log('Total items found:', data.total);
+                
+                currentItems = data.items;
+                totalItems = data.total;
+                totalPages = Math.ceil(totalItems / itemsPerPage);
+                
+                console.log('About to render', data.items.length, 'items');
+                
+                if (data.items.length > 0) {
+                    console.log('First item:', data.items[0]);
+                }
+                
+                renderInventoryTable(data.items);
+                updatePaginationInfo();
+                
+                console.log('Render complete');
+            } catch (error) {
+                console.error('Error en filterByCategory:', error);
+            }
+        }
+
+        // Variable global para debounce
+        let filterTimeout = null;
+
+        // Función de filtro automático mientras escribes
+        function autoFilterCategory() {
+            if (filterTimeout) {
+                clearTimeout(filterTimeout);
+            }
+            
+            filterTimeout = setTimeout(() => {
+                const categoria = document.getElementById('filterCategoria').value.trim();
+                console.log('Auto filter triggered, texto:', categoria);
+                filterByCategory();
+            }, 150);
+        }
+
+        // Función para detectar Enter en el campo de búsqueda
+        function handleSearchEnter(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchByName();
+            }
+        }
+
+        // Función auxiliar para mapear ordenamiento en búsqueda
+        function getSortParamsSearch() {
+            const sortType = document.getElementById('sortBySearch').value;
+            
+            const sortMap = {
+                'default': { sortBy: 'id', order: 'desc' },
+                'stock_desc': { sortBy: 'stock', order: 'desc' },
+                'stock_asc': { sortBy: 'stock', order: 'asc' },
+                'precio_desc': { sortBy: 'precio', order: 'desc' },
+                'precio_asc': { sortBy: 'precio', order: 'asc' },
+                'categoria_asc': { sortBy: 'categoria', order: 'asc' },
+                'categoria_desc': { sortBy: 'categoria', order: 'desc' },
+                'nombre_asc': { sortBy: 'nombre_articulo', order: 'asc' },
+                'nombre_desc': { sortBy: 'nombre_articulo', order: 'desc' }
+            };
+            
+            return sortMap[sortType] || sortMap['default'];
+        }
+
+        async function searchByName() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const categoria = document.getElementById('filterCategoriaSearch').value.trim();
+            const sortData = getSortParamsSearch();
+            
+            if (!query) {
+                alert('Ingresa un término de búsqueda');
+                return;
+            }
+
+            try {
+                // Construir URL con búsqueda, categoría y ordenamiento
+                let url = `${API_URL}/buscar?q=${encodeURIComponent(query)}`;
+                
+                if (categoria) {
+                    url += `&categoria=${encodeURIComponent(categoria)}`;
+                }
+                
+                // Aplicar ordenamiento
+                url += `&sort_by=${sortData.sortBy}&order=${sortData.order}`;
+                
+                console.log('Buscando con URL:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Encontrados:', data.items.length, 'items');
+                
+                // Ordenar los resultados en el cliente si es necesario
+                let items = data.items;
+                if (sortData.sortBy !== 'id' || sortData.order !== 'desc') {
+                    items = sortSearchResults(items, sortData.sortBy, sortData.order);
+                }
+                
+                renderSearchTable(items);
+            } catch (error) {
+                console.error('Error buscando:', error);
+                alert('Error en la búsqueda');
+            }
+        }
+
+        async function filterSearchResults() {
+            const categoria = document.getElementById('filterCategoriaSearch').value.trim();
+            const query = document.getElementById('searchQuery').value.trim();
+            
+            if (!query) {
+                alert('Primero realiza una búsqueda');
+                return;
+            }
+            
+            // Re-ejecutar la búsqueda con el filtro de categoría
+            await searchByName();
+        }
+
+        function reApplySortOnSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            
+            if (!query) {
+                console.log('No hay búsqueda activa');
+                return;
+            }
+            
+            // Re-ejecutar la búsqueda con el nuevo ordenamiento
+            console.log('Re-aplicando ordenamiento');
+            searchByName();
+        }
+
+        function clearSearchResults() {
+            document.getElementById('searchQuery').value = '';
+            document.getElementById('filterCategoriaSearch').value = '';
+            document.getElementById('sortBySearch').value = 'default';
+            
+            const tbody = document.getElementById('searchTable');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--color-texto-oscuro);">Ingresa un término de búsqueda...</td></tr>';
+        }
+
+        function sortSearchResults(items, sortBy, order) {
+            const sorted = [...items];
+            
+            const asc = order === 'asc' ? 1 : -1;
+            
+            if (sortBy === 'stock') {
+                sorted.sort((a, b) => (a.stock - b.stock) * asc);
+            } else if (sortBy === 'precio') {
+                sorted.sort((a, b) => (a.precio - b.precio) * asc);
+            } else if (sortBy === 'categoria') {
+                sorted.sort((a, b) => a.categoria.localeCompare(b.categoria) * asc);
+            } else if (sortBy === 'nombre_articulo') {
+                sorted.sort((a, b) => a.nombre.localeCompare(b.nombre) * asc);
+            } else {
+                sorted.sort((a, b) => (a.id - b.id) * asc);
+            }
+            
+            return sorted;
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/estadisticas`);
+                const data = await response.json();
+                
+                // Actualizar dashboard
+                document.getElementById('dashTotalItems').textContent = data.total_items;
+                document.getElementById('dashTotalValue').textContent = `$${data.valor_total_inventario.toFixed(2)}`;
+                
+                // Cargar componente MVP
+                loadMvpComponent();
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+            }
+        }
+
+        async function loadMvpComponent() {
+            try {
+                const response = await fetch(`${API_URL}/items/mas-caro/stock`);
+                if (!response.ok) {
+                    throw new Error('No se pudo obtener el componente MVP');
+                }
+                
+                const item = await response.json();
+                
+                const mvpDiv = document.getElementById('mvpComponent');
+                mvpDiv.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <div style="color: var(--color-texto-oscuro); font-size: 12px;">Nombre:</div>
+                            <div style="color: var(--color-cian); font-size: 16px; font-weight: bold;">${item.nombre}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--color-texto-oscuro); font-size: 12px;">Categoría:</div>
+                            <span class="categoria-badge">${item.categoria}</span>
+                        </div>
+                        <div>
+                            <div style="color: var(--color-texto-oscuro); font-size: 12px;">Precio:</div>
+                            <div style="color: var(--color-verde); font-size: 16px; font-weight: bold;">$${item.precio.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--color-texto-oscuro); font-size: 12px;">Stock:</div>
+                            <div style="color: ${item.stock < 5 ? '#ff6b6b' : 'var(--color-verde)'}; font-size: 16px; font-weight: bold;">${item.stock} unidades</div>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <div style="color: var(--color-texto-oscuro); font-size: 12px;">Valor Total:</div>
+                            <div style="color: var(--color-magenta); font-size: 18px; font-weight: bold; text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);">$${(item.stock * item.precio).toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error cargando MVP:', error);
+                const mvpDiv = document.getElementById('mvpComponent');
+                mvpDiv.innerHTML = '<div style="color: #ff6b6b; text-align: center;">No hay items en stock</div>';
+            }
+        }
+
+        function triggerCsvImport() {
+            const confirmed = confirm(
+                '⚠️ Este proceso importará datos CSV a la base de datos.\n\n' +
+                'Asegúrate de tener los archivos CSV en la carpeta ./data\n\n' +
+                '¿Deseas continuar?'
+            );
+            
+            if (!confirmed) return;
+            
+            importCsvData();
+        }
+
+        async function importCsvData() {
+            try {
+                console.log('Iniciando importación de CSV...');
+                
+                const response = await fetch(`${API_URL}/importar-csv`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Error al importar CSV');
+                }
+                
+                const result = await response.json();
+                alert(`✓ Importación completada\n\n${result.mensaje}`);
+                
+                // Recargar datos
+                loadInventory();
+                loadStats();
+                
+            } catch (error) {
+                console.error('Error importando CSV:', error);
+                alert(`⚠️ Error: ${error.message}\n\nAsegúrate de que los archivos CSV están en la carpeta ./data`);
+            }
+        }
+
+        function handleCsvFile(event) {
+            // Este método se mantiene por compatibilidad pero no se usa
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            console.log('Archivo seleccionado:', file.name);
+            alert('Para importar CSV, usa el botón "Importación Rápida" en el dashboard');
+        }
+
+        // ==================== RENDER DE TABLAS ====================
+        function renderInventoryTable(items) {
+            const tbody = document.getElementById('inventoryTable');
+
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay ítems en el inventario</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = items.map(item => `
+                <tr>
+                    <td>#${item.id}</td>
+                    <td>${item.nombre}</td>
+                    <td><span class="categoria-badge">${item.categoria}</span></td>
+                    <td><span class="${item.stock < 5 ? 'stock-bajo' : 'stock-ok'}">${item.stock}</span></td>
+                    <td>$${item.precio.toFixed(2)}</td>
+                    <td>$${(item.stock * item.precio).toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-small" onclick="openEditModal(${item.id}, '${item.nombre}', ${item.stock}, ${item.precio})">Editar</button>
+                        <button class="btn btn-success btn-small" onclick="adjustStock(${item.id}, 'increase', 1)">+1</button>
+                        <button class="btn btn-danger btn-small" onclick="adjustStock(${item.id}, 'reduce', 1)">-1</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteItem(${item.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderSearchTable(items) {
+            const tbody = document.getElementById('searchTable');
+
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No se encontraron resultados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = items.map(item => `
+                <tr>
+                    <td>#${item.id}</td>
+                    <td>${item.nombre}</td>
+                    <td><span class="categoria-badge">${item.categoria}</span></td>
+                    <td><span class="${item.stock < 5 ? 'stock-bajo' : 'stock-ok'}">${item.stock}</span></td>
+                    <td>$${item.precio.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-small" onclick="openEditModal(${item.id}, '${item.nombre}', ${item.stock}, ${item.precio})">Editar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ==================== MODAL ====================
+        function openEditModal(id, nombre, stock, precio) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editNombre').value = nombre;
+            document.getElementById('editStock').value = stock;
+            document.getElementById('editPrecio').value = precio;
+            document.getElementById('editMessage').innerHTML = '';
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') closeEditModal();
+        });
+
+        // ==================== UTILIDADES ====================
+        function showAlert(container, message, type) {
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
