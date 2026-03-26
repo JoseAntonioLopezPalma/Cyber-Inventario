@@ -147,7 +147,7 @@ class HardwareRepository:
             return None
 
         # Actualiza solo los campos proporcionados
-        update_data = item_update.dict(exclude_unset=True)
+        update_data = item_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_item, field, value)
 

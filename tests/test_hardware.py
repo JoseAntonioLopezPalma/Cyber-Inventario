@@ -42,6 +42,7 @@ def db_session():
     session = SessionLocal()
     yield session
     session.close()
+    engine.dispose()
 
 
 @pytest.fixture
@@ -283,7 +284,7 @@ class TestEdgeCases:
         """Debe encontrar ítem con búsqueda de nombre exacta."""
         item_data = HardwareItemCreate(
             nombre="RTX 4090",
-            categoria=HardwareCategoryEnum.GPUS,
+            categoria=HardwareCategoryEnum.TARJETAS_GRAFICAS,
             stock=3,
             precio=1599.99,
         )
@@ -394,7 +395,7 @@ class TestParametrizacion:
         """Prueba reducción de stock con diferentes cantidades."""
         item_data = HardwareItemCreate(
             nombre="Stock Test Item",
-            categoria=HardwareCategoryEnum.RAM,
+            categoria=HardwareCategoryEnum.MEMORIA_RAM,
             stock=20,
             precio=75.0,
         )
@@ -484,13 +485,13 @@ class TestRepositorio:
         items = [
             HardwareItemCreate(
                 nombre="RAM 1",
-                categoria=HardwareCategoryEnum.RAM,
+                categoria=HardwareCategoryEnum.MEMORIA_RAM,
                 stock=10,
                 precio=50.0,
             ),
             HardwareItemCreate(
                 nombre="RAM 2",
-                categoria=HardwareCategoryEnum.RAM,
+                categoria=HardwareCategoryEnum.MEMORIA_RAM,
                 stock=15,
                 precio=60.0,
             ),
@@ -500,6 +501,6 @@ class TestRepositorio:
             repository.crear(item_data)
         
         stock_total = repository.obtener_stock_por_categoria(
-            HardwareCategoryEnum.RAM
+            HardwareCategoryEnum.MEMORIA_RAM
         )
         assert stock_total == 25

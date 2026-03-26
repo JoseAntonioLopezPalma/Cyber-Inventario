@@ -4,7 +4,7 @@ Tabla principal: HardwareItem con validaciones y restricciones.
 """
 
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum
-from datetime import datetime
+from datetime import datetime, UTC
 import enum
 from app.database import Base
 
@@ -42,7 +42,7 @@ class HardwareItem(Base):
     categoria = Column(Enum(HardwareCategory), nullable=False, index=True)
     stock = Column(Integer, nullable=False, default=0)
     precio = Column(Float, nullable=False)
-    fecha_entrada = Column(DateTime, nullable=False, default=datetime.utcnow)
+    fecha_entrada = Column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
 
     def __repr__(self):
         return (

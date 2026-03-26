@@ -99,8 +99,6 @@ Plataforma escalable y modular para gestionar inventario de hardware con estéti
 git clone <repository-url>
 cd Proyecto
 
-# O simplemente navega a la carpeta del proyecto
-cd c:\Users\Candryl\Desktop\Proyecto
 ```
 
 ### Paso 2: Crear Entorno Virtual (Recomendado)

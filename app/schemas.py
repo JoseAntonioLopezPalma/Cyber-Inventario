@@ -3,7 +3,7 @@ Esquemas Pydantic para validación de datos.
 Garantiza que las entradas cumplan con las reglas de negocio.
 """
 
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -30,14 +30,14 @@ class HardwareItemBase(BaseModel):
     stock: int = Field(..., ge=0)  # >= 0
     precio: float = Field(..., gt=0)  # > 0
 
-    @validator("nombre")
+    @field_validator("nombre")
     def nombre_no_vacio(cls, v):
         """Valida que el nombre no sea solo espacios."""
         if not v.strip():
             raise ValueError("El nombre no puede estar vacío o contener solo espacios")
         return v.strip()
 
-    @validator("precio")
+    @field_validator("precio")
     def precio_valido(cls, v):
         """Valida que el precio sea positivo y razonable."""
         if v < 0:
@@ -46,7 +46,7 @@ class HardwareItemBase(BaseModel):
             raise ValueError("El precio parece ser demasiado alto (> $1M)")
         return round(v, 2)
 
-    @validator("stock")
+    @field_validator("stock")
     def stock_valido(cls, v):
         """Valida que el stock no sea negativo."""
         if v < 0:
@@ -66,14 +66,14 @@ class HardwareItemUpdate(BaseModel):
     stock: Optional[int] = Field(None, ge=0)
     precio: Optional[float] = Field(None, gt=0)
 
-    @validator("nombre")
+    @field_validator("nombre")
     def nombre_no_vacio(cls, v):
         """Valida que el nombre no sea solo espacios."""
         if v is not None and not v.strip():
             raise ValueError("El nombre no puede estar vacío o contener solo espacios")
         return v.strip() if v else v
 
-    @validator("precio")
+    @field_validator("precio")
     def precio_valido(cls, v):
         """Valida que el precio sea positivo."""
         if v is not None:
@@ -84,7 +84,7 @@ class HardwareItemUpdate(BaseModel):
             return round(v, 2)
         return v
 
-    @validator("stock")
+    @field_validator("stock")
     def stock_valido(cls, v):
         """Valida que el stock no sea negativo."""
         if v is not None and v < 0:

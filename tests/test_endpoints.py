@@ -38,6 +38,7 @@ def test_db():
     app.dependency_overrides[get_db] = override_get_db
     yield
     app.dependency_overrides.clear()
+    engine.dispose()
 
 
 @pytest.fixture
@@ -122,7 +123,7 @@ class TestEndpointsLectura:
             "/api/items",
             json={
                 "nombre": "Test Item",
-                "categoria": "Teclados",
+                "categoria": "Monitores",
                 "stock": 1,
                 "precio": 50.0,
             },
@@ -238,7 +239,7 @@ class TestEndpointsActualizacion:
             "/api/items",
             json={
                 "nombre": "Original",
-                "categoria": "Teclados",
+                "categoria": "Monitores",
                 "stock": 10,
                 "precio": 50.0,
             },
@@ -280,7 +281,7 @@ class TestEndpointsEliminacion:
             "/api/items",
             json={
                 "nombre": "Para Eliminar",
-                "categoria": "Ratones",
+                "categoria": "Monitores",
                 "stock": 1,
                 "precio": 30.0,
             },
@@ -336,7 +337,7 @@ class TestOperacionesInventario:
             "/api/items",
             json={
                 "nombre": "Low Stock",
-                "categoria": "Alfombrillas",
+                "categoria": "Monitores",
                 "stock": 5,
                 "precio": 20.0,
             },
@@ -358,7 +359,7 @@ class TestOperacionesInventario:
             "/api/items",
             json={
                 "nombre": "Increase Item",
-                "categoria": "Periféricos",
+                "categoria": "Monitores",
                 "stock": 10,
                 "precio": 50.0,
             },

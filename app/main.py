@@ -5,6 +5,7 @@ Documentación automática disponible en /docs (Swagger) y /redoc
 """
 
 from fastapi import FastAPI, Depends, HTTPException, status, Query
+from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -21,6 +22,12 @@ from app.schemas import (
     HardwareCategoryEnum,
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Maneja el ciclo de vida de la aplicación."""
+    init_db()
+    yield
+
 # Inicialización de FastAPI
 app = FastAPI(
     title="Cyber-Inventory API",
@@ -29,13 +36,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
-
-# Inicializar base de datos
-@app.on_event("startup")
-def startup_event():
-    """Se ejecuta al iniciar la aplicación."""
-    init_db()
 
 
 # ==================== ENDPOINTS CRUD ====================
