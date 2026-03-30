@@ -604,6 +604,13 @@
 
         <!-- ==================== SECCIÓN INVENTARIO ====================-->
         <section id="inventario" class="content-section">
+            <div style="background-color: var(--color-panel); border: 1px solid var(--color-verde); padding: 10px 15px; margin-bottom: 15px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="font-size: 12px; color: var(--color-verde);">
+                    <span id="inventoryStatus">Inventario cargado: <strong id="inventoryCount">0</strong> items</span>
+                </div>
+                <button class="btn btn-success btn-small" onclick="loadInventory()" title="Recargar inventario desde el servidor">Recargar</button>
+            </div>
+
             <div class="search-panel">
                 <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
@@ -937,6 +944,9 @@
         // ==================== CARGA DE DATOS ====================
         async function loadInventory(resetPage = true) {
             try {
+                // Mostrar estado de carga
+                document.getElementById('inventoryStatus').innerHTML = 'Cargando inventario...';
+                
                 // Resetear a página 1 si se solicita
                 if (resetPage) {
                     currentPage = 1;
@@ -964,8 +974,12 @@
                 
                 renderInventoryTable(data.items);
                 updatePaginationInfo();
+                
+                // Actualizar estado
+                document.getElementById('inventoryStatus').innerHTML = `Inventario cargado: <strong id="inventoryCount">${totalItems}</strong> items`;
             } catch (error) {
                 console.error('Error cargando inventario:', error);
+                document.getElementById('inventoryStatus').innerHTML = '<span style="color: #ff6b6b;">Error cargando inventario</span>';
             }
         }
 
@@ -1406,6 +1420,9 @@
                     </td>
                 </tr>
             `).join('');
+            
+            // Actualizar contador de items
+            document.getElementById('inventoryCount').textContent = totalItems;
         }
 
         function renderSearchTable(items) {
