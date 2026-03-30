@@ -4,7 +4,8 @@ Prueba los endpoints a través de HTTP simulado (TestClient).
 """
 
 import pytest
-from fastapi.testclient import TestClient
+from starlette.testclient import TestClient
+from starlette.applications import Starlette
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
